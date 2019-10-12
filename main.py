@@ -1,7 +1,9 @@
+import os, subprocess
+
 from include.server_manager import ServerManger
 from include.user_manager import UserManager
 
-#app main class
+# app main class
 class AppEntry():
 	def __init__(self):
 		self.showMenu()
@@ -15,10 +17,19 @@ class AppEntry():
 				continue
 			elif(self.choice == 2):
 				UserManager().editUser()
+				UserManager().editUser()
 				continue
 			elif(self.choice == 3):
 				ServerManger()
 				continue
+			elif(self.choice == 4):
+				print(os.fspath(os.getcwd()))
+				print(os.getlogin())
+				print("usertype: ",os.getuid())
+				print(os.uname())
+				subprocess.run(["which", "openvpn"])
+				subprocess.run(["pgrep", "openvpn"])
+				break
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -29,7 +40,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[01] - Create user\n\t[02] - Edit User\n\t[03] - Generate server files")
+		print("\t[1] - Create user\n\t[2] - Edit User\n\t[3] - Generate server files\n\t[4] - Check OPENVPN\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':
