@@ -12,7 +12,6 @@ class FileManager():
 
 	def createFile(self, folderName, fileName, fileType, contentToWrite):
 		if not self.returnFileExist(folderName, fileName, fileType): 
-			
 			try:
 				newFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "w+")
 				newFile.write(contentToWrite)
@@ -26,7 +25,6 @@ class FileManager():
 
 	def editFile(self, folderName, fileName, fileType, contentToWrite):
 		if self.returnFileExist(folderName, fileName, fileType): 
-			
 			try:
 				existingFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "a+")
 				existingFile.write(contentToWrite)
@@ -38,9 +36,20 @@ class FileManager():
 		else:
 			return False
 
+	def readFile(self, folderName, fileName, fileType):
+		if self.returnFileExist(folderName, fileName, fileType): 
+			try:
+				existingFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "r")
+			except:
+				return False
+			else:
+				# existingFile.close()
+				return existingFile
+		else:
+			return False
+
 	def deleteFile(self, folderName, fileName, fileType):
 		if self.returnFileExist(folderName, fileName, fileType):  
-			
 			try:
 				os.remove(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType)
 			except:
