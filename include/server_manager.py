@@ -1,7 +1,8 @@
 import requests, json
+from os import getcwd
+
 from include.file_manager import FileManager
 from include.folder_manager import FolderManager
-from os import getcwd
 
 class ServerManger():
 	def __init__(self):
