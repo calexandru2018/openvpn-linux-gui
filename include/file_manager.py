@@ -43,8 +43,9 @@ class FileManager():
 			except:
 				return False
 			else:
-				# existingFile.close()
 				return existingFile
+			# finally:
+			# 	existingFile.close()
 		else:
 			return False
 
