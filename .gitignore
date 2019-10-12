@@ -2,9 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
+protonvpn_server_collection
 
 # C extensions
 *.so
+
+# VSCode extensions
+.vscode
 
 # Distribution / packaging
 .Python
