@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 protonvpn_server_collection
+protonvpn_conf
 
 # C extensions
 *.so
