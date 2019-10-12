@@ -26,6 +26,20 @@ class UserManager():
 		if self.fileManager.returnFileExist(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']):
 			out = json.load(self.fileManager.readFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']))
 			print("Your config file has stored: ", out)
+			while True:
+				userInput = input("Would you like to edit your data ? [y/n]: ")
+
+				if userInput[0].lower() == 'n':
+					break
+				
+				self.askForInput()
+				
+				if self.fileManager.deleteFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']):
+					if self.fileManager.createFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType'],  json.dumps(self.userData, indent=2)):
+						break
+				
+				print("Unable to edit")
+				continue
 		else:
 			print("There are no config files.")
 
