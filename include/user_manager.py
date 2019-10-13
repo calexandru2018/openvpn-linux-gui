@@ -5,6 +5,17 @@ from include.folder_manager import FolderManager
 from include.file_manager import FileManager
 
 class UserManager():
+	'''Creates, edits and deletes user data.
+	
+	Methods
+    -------
+    createUser():
+        Create a new user.
+    editUser():
+        Edit existing user.
+    askForInput():
+        Ask the user for input.
+	'''
 	def __init__(self):
 		self.userData = {'username': '', 'password': '', 'tier': 0}
 		self.dirPath = getcwd()
