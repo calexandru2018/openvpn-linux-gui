@@ -19,23 +19,25 @@ class UserManager():
 	def __init__(self):
 		self.userData = {'username': '', 'password': '', 'tier': 0}
 		self.dirPath = getcwd()
-		self.fileManagerInfo = {'folderName': 'protonvpn_conf', 'fileName': 'proton_ovpn_credentials', 'fileType': 'json'}
+		self.folderName = 'protonvpn_conf'
+		self.fileName = 'proton_ovpn_credentials'
+		self.fileType = 'json'
 		self.folderManager = FolderManager(self.dirPath)
 		self.fileManager = FileManager(self.dirPath)
 	
-	#Create user
+	# Create user
 	def createUser(self):
 		self.askForInput()
 
-		if not self.folderManager.returnFolderExist(self.fileManagerInfo['folderName']):
-			self.folderManager.createFolder(self.fileManagerInfo['folderName'])
-		if not self.fileManager.returnFileExist(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']):
-			self.fileManager.createFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType'], json.dumps(self.userData, indent=2))		
+		if not self.folderManager.returnFolderExist(self.folderName):
+			self.folderManager.createFolder(self.folderName)
+		if not self.fileManager.returnFileExist(self.folderName, self.fileName, self.fileType):
+			self.fileManager.createFile(self.folderName, self.fileName, self.fileType, json.dumps(self.userData, indent=2))		
 
-	#Edit user
+	# Edit user
 	def editUser(self):
-		if self.fileManager.returnFileExist(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']):
-			out = json.load(self.fileManager.readFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']))
+		if self.checkUserExists:
+			out = json.load(self.fileManager.readFile(self.folderName, self.fileName, self.fileType))
 			print("Your config file has stored: ", out)
 			while True:
 				userInput = input("Would you like to edit your data ? [y/n]: ")
@@ -45,8 +47,8 @@ class UserManager():
 				
 				self.askForInput()
 				
-				if self.fileManager.deleteFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType']):
-					if self.fileManager.createFile(self.fileManagerInfo['folderName'], self.fileManagerInfo['fileName'], self.fileManagerInfo['fileType'],  json.dumps(self.userData, indent=2)):
+				if self.fileManager.deleteFile(self.folderName, self.fileName, self.fileType):
+					if self.fileManager.createFile(self.folderName, self.fileName, self.fileType,  json.dumps(self.userData, indent=2)):
 						break
 				
 				print("Unable to edit")
@@ -54,6 +56,13 @@ class UserManager():
 		else:
 			print("There are no config files.")
 
+	# Check if user exists
+	def checkUserExists(self):
+		if self.fileManager.returnFileExist(self.folderName, self.fileName, self.fileType):
+			return True
+		return False
+
+	# Ask the user for input
 	def askForInput(self):
 		self.userData['username'] = input("Type in your username: ")
 		self.userData['password'] = input("Type in your password: ")
