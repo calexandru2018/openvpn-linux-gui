@@ -20,7 +20,7 @@ class FileManager():
 		bool:
 			Returns True if file exists, False otherwise.
 		'''
-		if(os.path.isfile(f"./{folderName}/{fileName}.{fileType}")):
+		if(os.path.isfile(f"{self.dirPath}/{folderName}/{fileName}.{fileType}")):
 			return True
 		else:
 			return False
@@ -44,6 +44,7 @@ class FileManager():
 		bool:
 			Returns True if file is created, False otherwise.
 		'''
+
 		if not self.returnFileExist(folderName, fileName, fileType): 
 			try:
 				newFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "w+")
