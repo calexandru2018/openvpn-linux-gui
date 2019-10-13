@@ -6,11 +6,13 @@ class ConnectionManager():
 
 	# check if profile was created/initialized: check_if_profile_initialized()
 
-	# check for ip: check_ip()
+#[ConnectionManager] - 
+# Create a function that  
+ 	# check for ip: check_ip()
 
 	# check if there is nternet connection: is_internet_working_normally()
 
-	# check if openVpn is installed
+	# check if openVpn is installed is_openvpn_installed()
 
 	# connect to open_vpn: openvpn_connect()
 
