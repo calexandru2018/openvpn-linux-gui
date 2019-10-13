@@ -19,7 +19,6 @@ class AppEntry():
 				continue
 			elif(self.choice == 2):
 				UserManager().editUser()
-				UserManager().editUser()
 				continue
 			elif(self.choice == 3):
 				ServerManger()
@@ -35,7 +34,7 @@ class AppEntry():
 				subprocess.run(["pgrep", "openvpn"])
 				break
 			elif(self.choice == 5):
-				ConnectionManager().check_if_openvpn_is_currently_running()
+				ConnectionManager().check_if_profile_initialized()
 				break
 			elif(self.choice == 0):
 				print("Exit program\n")

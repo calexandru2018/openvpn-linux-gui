@@ -1,10 +1,17 @@
 import subprocess
+from include.user_manager import UserManager
 
 class ConnectionManager():
 	def __init__(self):
 		print("In connection manager")
 
 	# check if profile was created/initialized: check_if_profile_initialized()
+	def check_if_profile_initialized(self):
+		user = UserManager()
+		if user.checkUserExists():
+			print("User exists")
+		else:
+			print("user does not exist")
 
 #[ConnectionManager] - 
 # Create a function that  
