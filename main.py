@@ -36,6 +36,12 @@ class AppEntry():
 			elif(self.choice == 5):
 				ConnectionManager().check_if_profile_initialized()
 				continue
+			elif(self.choice == 6):
+				ConnectionManager().openvpn_connect()
+				continue
+			elif(self.choice == 7):
+				ConnectionManager().openvpn_disconnect()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -46,7 +52,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Create user\n\t[2] - Edit User\n\t[3] - Generate server files\n\t[4] - Check OPENVPN\n\t[5] - Network Manager\n\t[0] - Exit")
+		print("\t[1] - Create user\n\t[2] - Edit User\n\t[3] - Generate server files\n\t[4] - Check OPENVPN\n\t[5] - Network Manager\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':
