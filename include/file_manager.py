@@ -107,13 +107,12 @@ class FileManager():
 		'''
 		if self.returnFileExist(folderName, fileName, fileType): 
 			try:
-				existingFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "r")
+				file = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "r")
+				return file.read()
 			except:
 				return False
 			else:
-				return existingFile
-			# finally:
-			# 	existingFile.close()
+				existingFile.close()
 		else:
 			return False
 

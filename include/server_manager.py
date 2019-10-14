@@ -1,12 +1,11 @@
-import requests, json
-from os import getcwd
+import requests, json, os
 
 from include.file_manager import FileManager
 from include.folder_manager import FolderManager
 
 class ServerManger():
 	def __init__(self):
-		self.dirPath = getcwd()
+		self.dirPath = os.getcwd()
 		self.serverList = {}
 		self.serverNameLong = ''
 		self.serverNameShort = ''
@@ -56,7 +55,7 @@ class ServerManger():
 			'US': 'United States',
 			'ZA': 'South Africa',
 		}
-		self.collectServerList()
+		#self.collectServerList()
 	
 	def collectServerList(self):
 		serverReq = requests.get("https://api.protonmail.ch/vpn/logicals", headers={'User-Agent': 'Custom'}).json()
@@ -91,5 +90,16 @@ class ServerManger():
 				self.fileManager.createFile(self.folderName, k, 'json', json.dumps(v, indent=2))
 			else:
 				self.fileManager.editFile(self.folderName, k, 'json', json.dumps(v, indent=2))
-			
+
+	def filter_servers_country(self, returnCountry):
+		path = self.dirPath + "/" + self.folderName + "/" 
+		for root, dirs, files in os.walk(path):
+			#print(,files)
+			#returnCountry = returnCountry.upper() + ".json"
+			if returnCountry in files:
+				return True
+			return False
+		# 		return True
+		# return False
+
 			

@@ -1,12 +1,34 @@
-import subprocess, requests, re, os, signal
+import subprocess, requests, re, os, signal, json, pprint
 from include.user_manager import UserManager
+from include.server_manager import ServerManger
+from include.file_manager import FileManager
 
 class ConnectionManager():
 	def __init__(self):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 		self.user = UserManager()
+		self.server = ServerManger()
+		self.file = FileManager(os.getcwd())
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
+
+	def check_folder(self, country_to_check):
+		highestScore = 0
+		connectToID = ''
+		fileName = country_to_check.upper() + ".json"
+		#if self.server.filter_servers_country(string):
+		#serverList = self.file.readFile('servers_in_cache', country_to_check.upper(), 'json')
+		with open(os.getcwd()+"/"+"servers_in_cache/"+fileName) as file:
+			data = json.load(file)
+	
+		print(data['serverList']['NO#1']['score'])
+		for server in data['serverList']:
+			#print(data['serverList'][server]['score'],'SERVER_:_______')
+			if data['serverList'][server]['score'] >= highestScore:
+				highestScore = data['serverList'][server]['score']
+				connectToID = data['serverList'][server]['servers'][0]['ID']
+		print (connectToID, highestScore)
+		return (connectToID, highestScore)
 
 	def check_requirments(self):
 		allReqCheck = 6

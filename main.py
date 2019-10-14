@@ -21,6 +21,9 @@ class AppEntry():
 			elif(self.choice == 2):
 				UserManager().editUser()
 				continue
+			elif(self.choice == 3):
+				self.connMan.check_folder('no')
+				continue
 			elif(self.choice == 4):
 				print(self.connMan.check_requirments())
 				continue
@@ -33,6 +36,9 @@ class AppEntry():
 			elif(self.choice == 7):
 				self.connMan.openvpn_disconnect()
 				continue
+			elif(self.choice == 8):
+				ServerManger().collectServerList()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -43,7 +49,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Create user\n\t[2] - Edit User\n\t[4] - Check Requirments\n\t[5] - Network Manager\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
+		print("\t[1] - Create user\n\t[2] - Edit User\n\t[3] - Serach server folder\n\t[4] - Check Requirments\n\t[5] - Network Manager\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Collect Server List\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':
