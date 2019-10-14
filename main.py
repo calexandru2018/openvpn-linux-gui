@@ -22,7 +22,8 @@ class AppEntry():
 				UserManager().editUser()
 				continue
 			elif(self.choice == 3):
-				self.connMan.check_folder('no')
+				country = input("Which country to connect to: ")
+				self.connMan.check_folder(country)
 				continue
 			elif(self.choice == 4):
 				print(self.connMan.check_requirments())

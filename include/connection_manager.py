@@ -21,15 +21,23 @@ class ConnectionManager():
 		with open(os.getcwd()+"/"+"servers_in_cache/"+fileName) as file:
 			data = json.load(file)
 	
-		print(data['serverList']['NO#1']['score'])
 		for server in data['serverList']:
 			#print(data['serverList'][server]['score'],'SERVER_:_______')
 			if data['serverList'][server]['score'] >= highestScore:
 				highestScore = data['serverList'][server]['score']
-				connectToID = data['serverList'][server]['servers'][0]['ID']
-		print (connectToID, highestScore)
-		return (connectToID, highestScore)
-
+				connectToID = data['serverList'][server]['id']
+		connectInfo = (connectToID, highestScore)
+		print(connectInfo)
+		url = "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID="+connectInfo[0]+"&Protocol=udp"
+		print(url)
+		serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
+		if self.file.returnFileExist("protonvpn_conf", "server", "ovpn"):
+			self.file.deleteFile("protonvpn_conf", "server", "ovpn")
+		if self.file.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
+			print("information saved")
+			return True
+		
+		
 	def check_requirments(self):
 		allReqCheck = 6
 		checker = {
@@ -153,7 +161,13 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", "/etc/openvpn/server.ovpn"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		path = os.getcwd()+"/"+"protonvpn_conf/server.ovpn" 
+		with open(os.getcwd()+"/"+"protonvpn_conf/proton_ovpn_credentials.json") as file:
+			data = json.load(file)
+
+		userdata = data['username'] + "\n" + data['password']
+		print(userdata)
+		var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		var.wait()
 		# use sudo systemctl enable openvpn-client@server.service; server is the filename and it should en in .conf
 
