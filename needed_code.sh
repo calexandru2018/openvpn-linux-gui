@@ -438,6 +438,7 @@ function openvpn_connect() {
 
   # Set PROTONVPN_CLI_DAEMON=false to disable daemonization of openvpn.
   PROTONVPN_CLI_DAEMON=${PROTONVPN_CLI_DAEMON:=true}
+  # If it should run in the background or not
 
   wget \
     --header 'x-pm-appversion: Other' \
@@ -497,6 +498,7 @@ function openvpn_connect() {
     --config "$openvpn_config"
     --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
     --auth-retry nointeract
+    #Client will retry the connection without requerying for an –auth-user-pass username/password. Use this option for unattended clients
     --verb 4
     --log "$connection_logs"
   )
@@ -506,8 +508,10 @@ function openvpn_connect() {
                    --group "$(id -gn nobody)"
                   )
   fi
+  #By setting user to nobody or somebody similarly unprivileged, the hostile party would be limited in what damage they could cause. Of course once you take away privileges, you cannot return them to an OpenVPN session. This means, for example, that if you want to reset an OpenVPN daemon with a SIGUSR1 signal (for example in response to a DHCP reset), you should make use of one or more of the --persist options to ensure that OpenVPN doesn't need to execute any privileged operations in order to restart (such as re-reading key files or running ifconfig on the TUN device). 
 
-  if [[ $PROTONVPN_CLI_DAEMON == true ]]; then
+  if [[ $
+   == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
     trap 'openvpn_disconnect "" dont_exit' INT TERM
   else
