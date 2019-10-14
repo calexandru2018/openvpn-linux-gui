@@ -17,7 +17,7 @@ class UserManager():
         Ask the user for input.
 	'''
 	def __init__(self):
-		self.userData = {'username': '', 'password': '', 'tier': 0}
+		self.userData = {'username': '', 'password': '', 'tier': 0, 'protocol': 'udp'}
 		self.dirPath = getcwd()
 		self.folderName = 'protonvpn_conf'
 		self.fileName = 'proton_ovpn_credentials'
@@ -71,10 +71,21 @@ class UserManager():
 		self.userData['username'] = input("Type in your username: ")
 		self.userData['password'] = input("Type in your password: ")
 		while True: 
-			self.userData['tier'] = int(input("Type in your tier (1-4): "))
-			if(self.userData['tier'] >= 1 and self.userData['tier'] <= 4):
-				# print("Data saved")
-				break
-			else:	
+			try:
+				self.userData['tier'] = int(input("Type in your tier (1-4): "))
+				if(self.userData['tier'] >= 1 and self.userData['tier'] <= 4):
+					# print("Data saved")
+					break
+			except:
 				print("Incorrect, the tier should be between 1-4, try again.")
 				continue
+		while True:
+			try:
+				self.userData['protocol'] = input("Which protocol to use ? [default udp/tcp]: ")
+				if(self.userData['protocol'] == 'udp' or self.userData['protocol'] == 'tcp' or self.userData['protocol'].strip() == ''):
+					break
+			except:
+				print("Incorrect protocol")
+				continue
+			
+			
