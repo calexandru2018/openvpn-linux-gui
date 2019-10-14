@@ -104,78 +104,6 @@ function check_ip() {
   echo "$ip"
 }
 
-function init_cli() {
-  if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
-    echo -n "[!] User profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/n]: "
-    read "reset_profile"
-  fi
-  if  [[ ("$reset_profile" == "n" || "$reset_profile" == "N") ]]; then
-     echo "[*] Profile initialization canceled."
-     exit 0
-  fi
-
-  rm -rf "$(get_protonvpn_cli_home)/"  # Previous profile will be removed/overwritten, if any.
-  mkdir -p "$(get_protonvpn_cli_home)/"
-
-  create_vi_bindings
-
-  read -p "Enter OpenVPN username: " "openvpn_username"
-  read -s -p "Enter OpenVPN password: " "openvpn_password"
-  echo -e "$openvpn_username\n$openvpn_password" > "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
-  chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
-  chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
-
-  echo -e "\n[.] ProtonVPN Plans:\n1) Free\n2) Basic\n3) Plus\n4) Visionary"
-  protonvpn_tier=""
-  available_plans=(1 2 3 4)
-  while [[ $protonvpn_tier == "" ]]; do
-    read -p "Enter Your ProtonVPN plan ID: " "protonvpn_plan"
-    case "${available_plans[@]}" in  *"$protonvpn_plan"*)
-      protonvpn_tier=$((protonvpn_plan-1))
-      ;;
-    4)
-      protonvpn_tier=$((protonvpn_tier-1)) # Visionary gives access to the same VPNs as Plus.
-      ;;
-    *)
-      echo "Invalid input."
-    ;; esac
-  done
-  echo -e "$protonvpn_tier" > "$(get_protonvpn_cli_home)/protonvpn_tier"
-  chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_tier"
-  chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_tier"
-
-  read -p "[.] Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [y/N]: " "use_custom_dns"
-
-  if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
-     custom_dns=""
-     while [[ $custom_dns == "" ]]; do
-       read -p "Custom DNS Server: " "custom_dns"
-     done
-     echo -e "$custom_dns" > "$(get_protonvpn_cli_home)/.custom_dns"
-     chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/.custom_dns"
-     chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
-  fi
-
-  read -p "[.] [Security] Decrease OpenVPN privileges? [Y/n]: " "decrease_openvpn_privileges"
-  if [[ "$decrease_openvpn_privileges" == "y" || "$decrease_openvpn_privileges" == "Y" ||  "$decrease_openvpn_privileges" == "" ]]; then
-    echo "$decrease_openvpn_privileges" > "$(get_protonvpn_cli_home)/.decrease_openvpn_privileges"
-  fi
-
-  # Disabling killswitch prompt
-  #read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
-  #if [[ "$enable_killswitch" == "y" || "$enable_killswitch" == "Y" || "$enable_killswitch" == "" ]]; then
-  #  echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
-  #fi
-
-  config_cache_path="$(get_protonvpn_cli_home)/openvpn_cache/"
-  rm -rf "$config_cache_path"
-  mkdir -p "$config_cache_path"  # Folder for openvpn config cache.
-
-  chown -R "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/"
-  chmod -R 0400 "$(get_protonvpn_cli_home)/"
-
-  echo "[*] Done."
-}
 
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
@@ -321,91 +249,6 @@ function modify_dns() {
   fi
 }
 
-function openvpn_disconnect() {
-  max_checks=3
-  counter=0
-  disconnected=false
-
-  if [[ "$1" != "quiet" ]]; then
-    echo "Disconnecting..."
-  fi
-
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    manage_ipv6 enable # Enabling IPv6 on machine.
-  fi
-
-  while [[ $counter -lt $max_checks ]]; do
-      pkill -f openvpn
-      sleep 0.50
-      if [[ $(is_openvpn_currently_running) == false ]]; then
-        modify_dns revert_to_backup # Reverting to original DNS entries
-        disconnected=true
-        # killswitch disable # Disabling killswitch
-        cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
-        cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
-        rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
-
-        if [[ "$1" != "quiet" ]]; then
-          echo "[#] Disconnected."
-          echo "[#] Current IP: $(check_ip)"
-        fi
-
-        if [[ "$2" != "dont_exit" ]]; then
-          exit 0
-        else
-          break
-        fi
-      fi
-    counter=$((counter+1))
-  done
-
-  if [[ "$disconnected" == false ]]; then
-    if [[ "$1" != "quiet" ]]; then
-      echo "[!] Error disconnecting OpenVPN."
-
-      if [[ "$2" != "dont_exit" ]]; then
-        exit 1
-      fi
-
-    fi
-  fi
-}
-
-function update_cli() {
-  check_if_internet_is_working_normally
-
-  cli_path="/usr/local/bin/protonvpn-cli"
-  if [[ ! -f "$cli_path" ]]; then
-    echo "[!] Error: protonvpn-cli does not seem to be installed."
-    exit 1
-  fi
-  echo "[#] Checking for update..."
-  current_local_hashsum=$($sha512sum_tool "$cli_path" | cut -d " " -f1)
-  remote_=$(wget --timeout 6 -o /dev/null -q -O - 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
-  if [[ $? != 0 ]]; then
-    echo "[!] Error: There is an error updating protonvpn-cli."
-    exit 1
-  fi
-  remote_hashsum=$(echo "$remote_" | $sha512sum_tool | cut -d ' ' -f1)
-
-  if [[ "$current_local_hashsum" == "$remote_hashsum" ]]; then
-    echo "[*] protonvpn-cli is up-to-date!"
-    exit 0
-  else
-    echo "[#] A new update is available."
-    echo "[#] Updating..."
-    wget -q --timeout 20 -O "$cli_path" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
-    if [[ $? == 0 ]]; then
-      echo "[#] protonvpn-cli has been updated successfully."
-      exit 0
-    else
-      echo "[!] Error: There is an error updating protonvpn-cli."
-      exit 1
-    fi
-  fi
-}
-
-
 function openvpn_connect() {
   check_if_openvpn_is_currently_running
 
@@ -510,8 +353,7 @@ function openvpn_connect() {
   fi
   #By setting user to nobody or somebody similarly unprivileged, the hostile party would be limited in what damage they could cause. Of course once you take away privileges, you cannot return them to an OpenVPN session. This means, for example, that if you want to reset an OpenVPN daemon with a SIGUSR1 signal (for example in response to a DHCP reset), you should make use of one or more of the --persist options to ensure that OpenVPN doesn't need to execute any privileged operations in order to restart (such as re-reading key files or running ifconfig on the TUN device). 
 
-  if [[ $
-   == true ]]; then
+  if [[ $ == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
     trap 'openvpn_disconnect "" dont_exit' INT TERM
   else
@@ -526,4 +368,161 @@ function openvpn_connect() {
     status_exit=$openvpn_exit
   fi
   exit $status_exit
+}
+
+function openvpn_disconnect() {
+  max_checks=3
+  counter=0
+  disconnected=false
+
+  if [[ "$1" != "quiet" ]]; then
+    echo "Disconnecting..."
+  fi
+
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    manage_ipv6 enable # Enabling IPv6 on machine.
+  fi
+
+  while [[ $counter -lt $max_checks ]]; do
+      pkill -f openvpn
+      sleep 0.50
+      if [[ $(is_openvpn_currently_running) == false ]]; then
+        modify_dns revert_to_backup # Reverting to original DNS entries
+        disconnected=true
+        # killswitch disable # Disabling killswitch
+        cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
+        cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
+        rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
+
+        if [[ "$1" != "quiet" ]]; then
+          echo "[#] Disconnected."
+          echo "[#] Current IP: $(check_ip)"
+        fi
+
+        if [[ "$2" != "dont_exit" ]]; then
+          exit 0
+        else
+          break
+        fi
+      fi
+    counter=$((counter+1))
+  done
+
+  if [[ "$disconnected" == false ]]; then
+    if [[ "$1" != "quiet" ]]; then
+      echo "[!] Error disconnecting OpenVPN."
+
+      if [[ "$2" != "dont_exit" ]]; then
+        exit 1
+      fi
+
+    fi
+  fi
+}
+
+function init_cli() {
+  if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
+    echo -n "[!] User profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/n]: "
+    read "reset_profile"
+  fi
+  if  [[ ("$reset_profile" == "n" || "$reset_profile" == "N") ]]; then
+     echo "[*] Profile initialization canceled."
+     exit 0
+  fi
+
+  rm -rf "$(get_protonvpn_cli_home)/"  # Previous profile will be removed/overwritten, if any.
+  mkdir -p "$(get_protonvpn_cli_home)/"
+
+  create_vi_bindings
+
+  read -p "Enter OpenVPN username: " "openvpn_username"
+  read -s -p "Enter OpenVPN password: " "openvpn_password"
+  echo -e "$openvpn_username\n$openvpn_password" > "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
+  chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
+  chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
+
+  echo -e "\n[.] ProtonVPN Plans:\n1) Free\n2) Basic\n3) Plus\n4) Visionary"
+  protonvpn_tier=""
+  available_plans=(1 2 3 4)
+  while [[ $protonvpn_tier == "" ]]; do
+    read -p "Enter Your ProtonVPN plan ID: " "protonvpn_plan"
+    case "${available_plans[@]}" in  *"$protonvpn_plan"*)
+      protonvpn_tier=$((protonvpn_plan-1))
+      ;;
+    4)
+      protonvpn_tier=$((protonvpn_tier-1)) # Visionary gives access to the same VPNs as Plus.
+      ;;
+    *)
+      echo "Invalid input."
+    ;; esac
+  done
+  echo -e "$protonvpn_tier" > "$(get_protonvpn_cli_home)/protonvpn_tier"
+  chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_tier"
+  chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_tier"
+
+  read -p "[.] Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [y/N]: " "use_custom_dns"
+
+  if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
+     custom_dns=""
+     while [[ $custom_dns == "" ]]; do
+       read -p "Custom DNS Server: " "custom_dns"
+     done
+     echo -e "$custom_dns" > "$(get_protonvpn_cli_home)/.custom_dns"
+     chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/.custom_dns"
+     chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
+  fi
+
+  read -p "[.] [Security] Decrease OpenVPN privileges? [Y/n]: " "decrease_openvpn_privileges"
+  if [[ "$decrease_openvpn_privileges" == "y" || "$decrease_openvpn_privileges" == "Y" ||  "$decrease_openvpn_privileges" == "" ]]; then
+    echo "$decrease_openvpn_privileges" > "$(get_protonvpn_cli_home)/.decrease_openvpn_privileges"
+  fi
+
+  # Disabling killswitch prompt
+  #read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
+  #if [[ "$enable_killswitch" == "y" || "$enable_killswitch" == "Y" || "$enable_killswitch" == "" ]]; then
+  #  echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
+  #fi
+
+  config_cache_path="$(get_protonvpn_cli_home)/openvpn_cache/"
+  rm -rf "$config_cache_path"
+  mkdir -p "$config_cache_path"  # Folder for openvpn config cache.
+
+  chown -R "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/"
+  chmod -R 0400 "$(get_protonvpn_cli_home)/"
+
+  echo "[*] Done."
+}
+
+function update_cli() {
+  check_if_internet_is_working_normally
+
+  cli_path="/usr/local/bin/protonvpn-cli"
+  if [[ ! -f "$cli_path" ]]; then
+    echo "[!] Error: protonvpn-cli does not seem to be installed."
+    exit 1
+  fi
+  echo "[#] Checking for update..."
+  current_local_hashsum=$($sha512sum_tool "$cli_path" | cut -d " " -f1)
+  remote_=$(wget --timeout 6 -o /dev/null -q -O - 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
+  if [[ $? != 0 ]]; then
+    echo "[!] Error: There is an error updating protonvpn-cli."
+    exit 1
+  fi
+  remote_hashsum=$(echo "$remote_" | $sha512sum_tool | cut -d ' ' -f1)
+
+  if [[ "$current_local_hashsum" == "$remote_hashsum" ]]; then
+    echo "[*] protonvpn-cli is up-to-date!"
+    exit 0
+  else
+    echo "[#] A new update is available."
+    echo "[#] Updating..."
+    wget -q --timeout 20 -O "$cli_path" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
+    if [[ $? == 0 ]]; then
+      echo "[#] protonvpn-cli has been updated successfully."
+      exit 0
+    else
+      echo "[!] Error: There is an error updating protonvpn-cli."
+      exit 1
+    fi
+  fi
 }
