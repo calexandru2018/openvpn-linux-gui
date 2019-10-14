@@ -28,15 +28,20 @@ class UserManager():
 	# Create user
 	def createUser(self):
 		self.askForInput()
-
-		if not self.folderManager.returnFolderExist(self.folderName):
-			self.folderManager.createFolder(self.folderName)
-		if not self.fileManager.returnFileExist(self.folderName, self.fileName, self.fileType):
-			self.fileManager.createFile(self.folderName, self.fileName, self.fileType, json.dumps(self.userData, indent=2))		
+		if not self.checkUserExists():
+			if self.folderManager.createFolder(self.folderName):
+				if self.fileManager.createFile(self.folderName, self.fileName, self.fileType, json.dumps(self.userData, indent=2)):
+					return True
+				print("Unable to create file")
+				return False
+			print("unable to create folder")
+			return False
+		print("User already exists")
+		return False		
 
 	# Edit user
 	def editUser(self):
-		if self.checkUserExists:
+		if self.checkUserExists():
 			out = json.load(self.fileManager.readFile(self.folderName, self.fileName, self.fileType))
 			print("Your config file has stored: ", out)
 			while True:
@@ -49,9 +54,8 @@ class UserManager():
 				
 				if self.fileManager.deleteFile(self.folderName, self.fileName, self.fileType):
 					if self.fileManager.createFile(self.folderName, self.fileName, self.fileType,  json.dumps(self.userData, indent=2)):
-						break
-				
-				print("Unable to edit")
+						return True
+				print(f"Unable to edit, unable to find folder {self.folderName} and/or file {self.fileName}")
 				continue
 		else:
 			print("There are no config files.")
@@ -69,7 +73,7 @@ class UserManager():
 		while True: 
 			self.userData['tier'] = int(input("Type in your tier (1-4): "))
 			if(self.userData['tier'] >= 1 and self.userData['tier'] <= 4):
-				print("Data saved")
+				# print("Data saved")
 				break
 			else:	
 				print("Incorrect, the tier should be between 1-4, try again.")
