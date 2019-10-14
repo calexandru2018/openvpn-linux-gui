@@ -9,6 +9,7 @@ class AppEntry():
 
 	def __init__(self):
 		self.showMenu()
+		self.connMan = ConnectionManager()
 		self.switch()
 
 	def switch(self):
@@ -20,27 +21,17 @@ class AppEntry():
 			elif(self.choice == 2):
 				UserManager().editUser()
 				continue
-			elif(self.choice == 3):
-				ServerManger()
-				continue
 			elif(self.choice == 4):
-				print("Absolute path of working directory: ",os.fspath(os.getcwd()))
-				print("Determines the user: ", os.getlogin())
-				print("usertype (0 - root): ",os.getuid())
-				print("OS information: ", os.uname())
-				subprocess.run(["python", "--version"])
-				subprocess.run(["which", "python"])
-				subprocess.run(["which", "openvpn"])
-				subprocess.run(["pgrep", "openvpn"])
+				print(self.connMan.check_requirments())
 				continue
 			elif(self.choice == 5):
-				ConnectionManager().check_if_profile_initialized()
+				self.connMan.check_if_profile_initialized()
 				continue
 			elif(self.choice == 6):
-				ConnectionManager().openvpn_connect()
+				self.connMan.openvpn_connect()
 				continue
 			elif(self.choice == 7):
-				ConnectionManager().openvpn_disconnect()
+				self.connMan.openvpn_disconnect()
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -52,7 +43,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Create user\n\t[2] - Edit User\n\t[3] - Generate server files\n\t[4] - Check OPENVPN\n\t[5] - Network Manager\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
+		print("\t[1] - Create user\n\t[2] - Edit User\n\t[4] - Check Requirments\n\t[5] - Network Manager\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':

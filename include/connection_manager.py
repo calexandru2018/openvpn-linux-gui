@@ -3,16 +3,24 @@ from include.user_manager import UserManager
 
 class ConnectionManager():
 	def __init__(self):
-		print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+		self.user = UserManager()
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
-		self.user = UserManager()
-		self.is_openvpn_installed()
-		self.check_if_openvpn_is_currently_running()
-		self.check_python_version()
-		self.check_ip()
-		self.is_open_resolv_installed('/etc/', 'resolv.conf')
-		self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')
+
+	def check_requirments(self):
+		checker = {
+			'check_python_version': self.check_python_version(),
+			'is_internet_working_normally': self.is_internet_working_normally(),
+			'is_profile_initialized': self.check_if_profile_initialized(),
+			'is_openvpn_installed': self.is_openvpn_installed(), 
+			'is_open_resolv_installed': self.is_open_resolv_installed('/etc/', 'resolv.conf'),
+			'is_update_resolv_conf_installed': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')
+		}
+		for check in checker:
+			if not checker[check]:
+				return False
+		return True
 
 	# check if profile was created/initialized: check_if_profile_initialized()
 	def check_if_profile_initialized(self):
@@ -26,15 +34,15 @@ class ConnectionManager():
 			3 - Returns False if it was unable to configure/initialize a new user. 
 		'''
 		if self.user.checkUserExists():
-			print("User exists")
+			#print("User exists")
 			return True
 		else:
 			userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
 			if(userChoice[0].lower() == 'y'):
 				if self.user.createUser():
-					print("User created succesfully!")
+					#print("User created succesfully!")
 					return True
-				print("Unable to create user")
+				#print("Unable to create user")
 				return False
  
  	# check for ip: check_ip()
@@ -50,7 +58,7 @@ class ConnectionManager():
 		dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
 		protonRequest = requests.get(self.ipProtonCheckUrl, headers={'User-Agent': 'Custom'}).json()
 		if dyndnsIp == protonRequest['IP']:
-			print("Internet is OK and your IP is:", dyndnsIp)
+			#print("Internet is OK and your IP is:", dyndnsIp)
 			return True
 		return False
 
@@ -79,7 +87,7 @@ class ConnectionManager():
 
 		decodedString = self.cmdCommand(["which", "openvpn"])
 		if decodedString:
-			print("Is OpenVPN installed: ", decodedString)
+			#print("Is OpenVPN installed: ", decodedString)
 			return True
 		return False
 
@@ -92,7 +100,7 @@ class ConnectionManager():
 			True if PID is found, False otherwise.
 		'''
 		open_vpn_process = self.cmdCommand(["pgrep", "openvpn"])
-		print("Is OpenVPN running: ", open_vpn_process)
+		#print("Is OpenVPN running: ", open_vpn_process)
 		if open_vpn_process:
 			return True
 		return False
@@ -100,7 +108,7 @@ class ConnectionManager():
 	def check_python_version(self):
 		pythonVersion = self.cmdCommand(["python", "--version"])
 		if pythonVersion.split(' ')[1] > '3.3':
-			print("Your Python version: ", pythonVersion)
+			#print("Your Python version: ", pythonVersion)
 			return True
 		return False
 
@@ -158,6 +166,6 @@ class ConnectionManager():
 	def find(self, path, file):
 		for root, dirs, files in os.walk(path):
 			if file in files:
-				print(file, os.path.join(root, file))
+				#print(file, os.path.join(root, file))
 				return True
 		return False
