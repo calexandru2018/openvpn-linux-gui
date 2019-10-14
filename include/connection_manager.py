@@ -1,4 +1,4 @@
-import subprocess, requests, re, os
+import subprocess, requests, re, os, getpass
 from include.user_manager import UserManager
 
 class ConnectionManager():
@@ -119,7 +119,7 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		subprocess.Popen(["openvpn", "--config", "/etc/openvpn/server.opvn"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+		subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", "/etc/openvpn/server.ovpn"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		# use sudo systemctl enable openvpn-client@server.service; server is the filename and it should en in .conf
 
 	# disconnect from open_vpn: openvpn_disconnect()
