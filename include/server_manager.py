@@ -12,7 +12,7 @@ class ServerManger():
 		self.serverNameShort = ''
 		self.fileManager = FileManager(self.dirPath)
 		self.folderManager = FolderManager(self.dirPath)
-		self.folderName = 'protonvpn_server_collection'
+		self.folderName = 'servers_in_cache'
 		self.countryList =  {
 			'AT': 'Austria',
 			'AU': 'Australia',
@@ -57,7 +57,6 @@ class ServerManger():
 			'ZA': 'South Africa',
 		}
 		self.collectServerList()
-		
 	
 	def collectServerList(self):
 		serverReq = requests.get("https://api.protonmail.ch/vpn/logicals", headers={'User-Agent': 'Custom'}).json()

@@ -9,21 +9,23 @@ class ConnectionManager():
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
 
 	def check_requirments(self):
+		allReqCheck = 6
 		checker = {
-			'check_python_version': self.check_python_version(),
-			'is_internet_working_normally': self.is_internet_working_normally(),
-			'is_profile_initialized': self.check_if_profile_initialized(),
-			'is_openvpn_installed': self.is_openvpn_installed(), 
-			'is_open_resolv_installed': self.is_open_resolv_installed('/etc/', 'resolv.conf'),
-			'is_update_resolv_conf_installed': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')
+			'check_python_version': {'name': 'Python Version is above 3.3', 'return': self.check_python_version()},
+			'is_internet_working_normally': {'name': 'Your internet is working normally', 'return':self.is_internet_working_normally()},
+			'is_profile_initialized': {'name': 'Your profile nitialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
+			'is_openvpn_installed': {'name': 'OpenVPN is installed', 'return':self.is_openvpn_installed()}, 
+			'is_open_resolv_installed': {'name': 'Open Resolv installed', 'return': self.is_open_resolv_installed('/etc/', 'resolv.conf')},
+			'is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
 		}
 		for check in checker:
-			if not checker[check]:
-				return False
-		return True
+			#if not checker[check]['return']:
+			print(f"{checker[check]['name']}: {checker[check]['return']}")
+			allReqCheck -= allReqCheck
+		return allReqCheck == 6
 
 	# check if profile was created/initialized: check_if_profile_initialized()
-	def check_if_profile_initialized(self):
+	def check_if_profile_initialized(self, requirments_check=False):
 		'''Checks if user profile is configured/intialized.
 
 		Returns:
@@ -37,12 +39,15 @@ class ConnectionManager():
 			#print("User exists")
 			return True
 		else:
-			userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
-			if(userChoice[0].lower() == 'y'):
-				if self.user.createUser():
-					#print("User created succesfully!")
-					return True
-				#print("Unable to create user")
+			if(requirments_check == False):
+				userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
+				if(userChoice[0].lower() == 'y'):
+					if self.user.createUser():
+						#print("User created succesfully!")
+						return True
+					#print("Unable to create user")
+					return False
+			else:
 				return False
  
  	# check for ip: check_ip()
