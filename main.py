@@ -32,10 +32,10 @@ class AppEntry():
 				subprocess.run(["which", "python"])
 				subprocess.run(["which", "openvpn"])
 				subprocess.run(["pgrep", "openvpn"])
-				break
+				continue
 			elif(self.choice == 5):
 				ConnectionManager().check_if_profile_initialized()
-				break
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
