@@ -13,6 +13,7 @@ class ConnectionManager():
 		self.check_ip()
 		self.is_open_resolv_installed('/etc/', 'resolv.conf')
 		self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')
+		self.openvpn_connect()
 
 	# check if profile was created/initialized: check_if_profile_initialized()
 	def check_if_profile_initialized(self):
@@ -117,6 +118,8 @@ class ConnectionManager():
 		return False
 
 	# connect to open_vpn: openvpn_connect()
+	def openvpn_connect(self):
+		subprocess.Popen(["openvpn", "--config", "/etc/openvpn/server.opvn"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
 		# use sudo systemctl enable openvpn-client@server.service; server is the filename and it should en in .conf
 
 	# disconnect from open_vpn: openvpn_disconnect()
