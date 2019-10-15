@@ -20,7 +20,8 @@ class FileManager():
 		bool:
 			Returns True if file exists, False otherwise.
 		'''
-		if(os.path.isfile(f"{self.rootDir}/{folderName}/{fileName}.{fileType}")):
+		pathToFile = self.rootDir+"/"+folderName+"/"+fileName+"."+fileType
+		if(os.path.isfile(pathToFile)):
 			return True
 		else:
 			return False
