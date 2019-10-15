@@ -1,7 +1,8 @@
 import subprocess, requests, re, os, signal, json, pprint, time
 from include.user_manager import UserManager
 from include.file_manager import FileManager
-
+from include.folder_manager import FolderManager
+from include.server_manager import ServerManager
 class ConnectionManager():
 	def __init__(self, rootDir):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
@@ -232,6 +233,7 @@ class ConnectionManager():
 			self.actual_ip = self.new_ip
 			self.new_ip = 0
 			print(message)
+			FolderManager(self.rootDir).delete_folder_recursive(ServerManager(self.rootDir).folderName)
 		else:
 			print("An error occurred.")
 
