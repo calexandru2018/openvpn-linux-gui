@@ -21,17 +21,17 @@ class AppEntry():
 				self.connMan.check_requirments()
 				continue
 			elif(self.choice == 2):
-				self.userMan.createUser()
+				self.userMan.create_user_credentials()
+				self.userMan.create_server_conf()
 				continue
 			elif(self.choice == 3):
-				self.userMan.editUser()
+				self.userMan.ask_what_to_edit()
 				continue
 			elif(self.choice == 4):
 				self.serverMan.collectServerList()
 				continue
 			elif(self.choice == 5):
-				country = input("Which country to connect to: ")
-				self.connMan.generate_ovpn_file(country)
+				self.connMan.generate_ovpn_file()
 				continue
 			elif(self.choice == 6):
 				self.connMan.openvpn_connect()
@@ -49,7 +49,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Collect Server List\n\t[0] - Exit")
+		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':
