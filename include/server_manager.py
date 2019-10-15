@@ -3,7 +3,7 @@ import requests, json, os
 from include.file_manager import FileManager
 from include.folder_manager import FolderManager
 
-class ServerManger():
+class ServerManager():
 	def __init__(self, rootDir):
 		self.rootDir = rootDir
 		self.serverList = {}

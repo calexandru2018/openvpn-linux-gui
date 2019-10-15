@@ -1,6 +1,6 @@
 import os, subprocess
 
-from include.server_manager import ServerManger
+from include.server_manager import ServerManager
 from include.user_manager import UserManager
 from include.connection_manager import ConnectionManager
 
@@ -11,7 +11,7 @@ class AppEntry():
 		self.rootDir = os.getcwd()
 		self.connMan = ConnectionManager(self.rootDir)
 		self.userMan = UserManager(self.rootDir)
-		self.serverMan = ServerManger(self.rootDir)
+		self.serverMan = ServerManager(self.rootDir)
 		self.switch()
 
 	def switch(self):
