@@ -1,4 +1,4 @@
-import subprocess, requests, re, os, signal, json, pprint, time
+import subprocess, requests, re, os, signal, json, pprint
 from include.user_manager import UserManager
 from include.file_manager import FileManager
 from include.folder_manager import FolderManager
@@ -35,6 +35,7 @@ class ConnectionManager():
 		try:
 			country = input("Which country to connect to: ")
 			path = self.rootDir+"/"+"servers_in_cache/"+country.upper() + "."+ self.fileType
+				
 			with open(path) as file:
 				data = json.load(file)
 
@@ -42,7 +43,7 @@ class ConnectionManager():
 			user_selected_protocol = json.loads(self.user_manager.read_user_data())
 
 			url = "https://api.protonmail.ch/vpn/config?Platform=" + self.platform + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
-			
+
 			serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
 			if self.file_manager.returnFileExist("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1]):
 				self.file_manager.deleteFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1])
@@ -237,6 +238,48 @@ class ConnectionManager():
 		else:
 			print("An error occurred.")
 
+	def start_on_boot(self):
+		# will work specifically on manjaro
+		self.generate_ovpn_for_boot()
+		# if self.generate_ovpn_for_boot():
+		# 	fileName = "openvpn-client@"+self.ovpn_file[0]+".service"
+		# 	var = subprocess.Popen(["systemctl", "enable", fileName], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		# 	var.wait()
+
+	def generate_ovpn_for_boot(self):
+		# try:
+		country = input("Which country to connect to: ")
+		path = self.rootDir+"/"+"servers_in_cache/"+country.upper() + "."+ self.fileType
+			
+		with open(path) as file:
+			data = json.load(file)
+
+		connectInfo = self.auto_select_optimal_server(data)
+		user_selected_protocol = json.loads(self.user_manager.read_user_data())
+
+		url = "https://api.protonmail.ch/vpn/config?Platform=" + self.platform + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
+
+		server_req = requests.get(url, headers={'User-Agent': 'Custom'})
+
+		original_req = server_req.text
+		#print(original_req.find("auth-user-pass"))
+		modified_request = original_req[:1699] + " /opt/.user_credentials" + original_req[1699:]
+		#print(modified_request)
+		# WILL ONLY WORK IF THE GENERATED FILS IS WITHIN /OPT/[OPTIONAL NAME]
+		newFile = open("/etc/openvpn/client/"+self.ovpn_file[0]+".conf", "w")
+		newFile.write(modified_request)
+
+		# except IOError:
+		# 	print("Unable to create file", IOError)
+		# 	return False
+			
+		# 	if self.file_manager.returnFileExist("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1]):
+		# 		self.file_manager.deleteFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1])
+		# 	if self.file_manager.createFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1], serverReq.text):
+		# 		print("An ovpn file has bee created, try to establish a connection now.")
+		# 		return True
+		# except FileNotFoundError:
+		# 	print("There is no such country, maybe servers were not cached ?")
 
 	# install update_resolv_conf: install_update_resolv_conf()
 

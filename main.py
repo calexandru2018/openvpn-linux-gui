@@ -39,6 +39,9 @@ class AppEntry():
 			elif(self.choice == 7):
 				self.connMan.openvpn_disconnect()
 				continue
+			elif(self.choice == 8):
+				self.connMan.start_on_boot()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -49,7 +52,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[0] - Exit")
+		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Start on boot\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':
