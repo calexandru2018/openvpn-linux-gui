@@ -47,7 +47,7 @@ class ConnectionManager():
 		checker = {
 			'check_python_version': {'name': 'Python Version is above 3.3', 'return': self.check_python_version()},
 			'is_internet_working_normally': {'name': 'Your internet is working normally', 'return':self.is_internet_working_normally()},
-			'is_profile_initialized': {'name': 'Your profile nitialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
+			'is_profile_initialized': {'name': 'Your profile is initialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
 			'is_openvpn_installed': {'name': 'OpenVPN is installed', 'return':self.is_openvpn_installed()}, 
 			'is_open_resolv_installed': {'name': 'Open Resolv installed', 'return': self.is_open_resolv_installed('/etc/', 'resolv.conf')},
 			'is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
