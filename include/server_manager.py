@@ -85,21 +85,26 @@ class ServerManger():
 	def saveCountryList(self):
 		if not self.folderManager.returnFolderExist(self.folderName):
 			self.folderManager.createFolder(self.folderName)
+		else:
+			if self.folderManager.delete_folder_recursive(self.folderName):
+				self.folderManager.createFolder(self.folderName)
+			else:
+				print("Unable to delete folder ", self.folderManager.delete_folder_recursive(self.folderName))
+				return False
+
 		for k, v in self.serverList.items():
 			if not self.fileManager.returnFileExist(self.folderName, k, 'json'):
 				self.fileManager.createFile(self.folderName, k, 'json', json.dumps(v, indent=2))
 			else:
 				self.fileManager.editFile(self.folderName, k, 'json', json.dumps(v, indent=2))
+		print("Servers cached successfully!")
 
 	def filter_servers_country(self, returnCountry):
 		path = self.rootDir + "/" + self.folderName + "/" 
 		for root, dirs, files in os.walk(path):
-			#print(,files)
-			#returnCountry = returnCountry.upper() + ".json"
 			if returnCountry in files:
 				return True
 			return False
-		# 		return True
-		# return False
+
 
 			
