@@ -42,7 +42,7 @@ class UserManager():
 	# Edit user
 	def editUser(self):
 		if self.checkUserExists():
-			out = json.load(self.fileManager.readFile(self.folderName, self.fileName, self.fileType))
+			out = json.loads(self.fileManager.readFile(self.folderName, self.fileName, self.fileType))
 			print("Your config file has stored: ", out)
 			while True:
 				userInput = input("Would you like to edit your data ? [y/n]: ")
