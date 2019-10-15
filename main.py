@@ -6,10 +6,10 @@ from include.connection_manager import ConnectionManager
 
 # app main class
 class AppEntry():
-
 	def __init__(self):
 		self.showMenu()
-		self.connMan = ConnectionManager()
+		self.current_working_dir = os.getcwd()
+		self.connMan = ConnectionManager(self.current_working_dir)
 		self.switch()
 
 	def switch(self):

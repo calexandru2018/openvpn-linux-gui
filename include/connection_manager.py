@@ -4,11 +4,11 @@ from include.server_manager import ServerManger
 from include.file_manager import FileManager
 
 class ConnectionManager():
-	def __init__(self):
+	def __init__(self, current_working_dir):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 		self.user = UserManager()
 		self.server = ServerManger()
-		self.file = FileManager(os.getcwd())
+		self.file = current_working_dir
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
 
@@ -18,25 +18,28 @@ class ConnectionManager():
 		fileName = country_to_check.upper() + ".json"
 		#if self.server.filter_servers_country(string):
 		#serverList = self.file.readFile('servers_in_cache', country_to_check.upper(), 'json')
-		with open(os.getcwd()+"/"+"servers_in_cache/"+fileName) as file:
-			data = json.load(file)
-	
-		for server in data['serverList']:
-			#print(data['serverList'][server]['score'],'SERVER_:_______')
-			if data['serverList'][server]['score'] >= highestScore:
-				highestScore = data['serverList'][server]['score']
-				connectToID = data['serverList'][server]['id']
-		connectInfo = (connectToID, highestScore)
-		print(connectInfo)
-		url = "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID="+connectInfo[0]+"&Protocol=udp"
-		print(url)
-		serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
-		if self.file.returnFileExist("protonvpn_conf", "server", "ovpn"):
-			self.file.deleteFile("protonvpn_conf", "server", "ovpn")
-		if self.file.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
-			print("information saved")
-			return True
-		
+		try:
+			with open(os.getcwd()+"/"+"servers_in_cache/"+fileName) as file:
+				data = json.load(file)
+				print(data)
+				if(data):
+					for server in data['serverList']:
+						#print(data['serverList'][server]['score'],'SERVER_:_______')
+						if data['serverList'][server]['score'] >= highestScore:
+							highestScore = data['serverList'][server]['score']
+							connectToID = data['serverList'][server]['id']
+					connectInfo = (connectToID, highestScore)
+					print(connectInfo)
+					url = "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID="+connectInfo[0]+"&Protocol=udp"
+					print(url)
+					serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
+					if self.file.returnFileExist("protonvpn_conf", "server", "ovpn"):
+						self.file.deleteFile("protonvpn_conf", "server", "ovpn")
+					if self.file.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
+						print("information saved")
+						return True
+		except FileNotFoundError:
+			print("There is no such country ")
 		
 	def check_requirments(self):
 		allReqCheck = 6
