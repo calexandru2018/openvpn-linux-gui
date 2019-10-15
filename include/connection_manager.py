@@ -12,7 +12,7 @@ class ConnectionManager():
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
 
-	def check_folder(self, country_to_check):
+	def generate_ovpn_file(self, country_to_check):
 		highestScore = 0
 		connectToID = ''
 		fileName = country_to_check.upper() + ".json"
@@ -39,7 +39,7 @@ class ConnectionManager():
 						print("information saved")
 						return True
 		except FileNotFoundError:
-			print("There is no such country ")
+			print("There is no such country")
 		
 	def check_requirments(self):
 		allReqCheck = 6
