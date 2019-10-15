@@ -53,9 +53,9 @@ class ConnectionManager():
 			'is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
 		}
 		for check in checker:
-			#if not checker[check]['return']:
+			if not checker[check]['return']:
+				allReqCheck -= allReqCheck
 			print(f"{checker[check]['name']}: {checker[check]['return']}")
-			allReqCheck -= allReqCheck
 		return allReqCheck == 6
 
 	# check if profile was created/initialized: check_if_profile_initialized()
