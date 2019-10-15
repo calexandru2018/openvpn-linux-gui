@@ -29,7 +29,7 @@ class AppEntry():
 				continue
 			elif(self.choice == 5):
 				country = input("Which country to connect to: ")
-				self.connMan.generate_ovpn_file()(country)
+				self.connMan.generate_ovpn_file(country)
 				continue
 			elif(self.choice == 6):
 				self.connMan.openvpn_connect()
