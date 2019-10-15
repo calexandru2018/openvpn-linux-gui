@@ -58,7 +58,7 @@ class UserManager():
 				print(f"Unable to edit, unable to find folder {self.folderName} and/or file {self.fileName}")
 				continue
 		else:
-			print("There are no config files.")
+			print("There are no config files to edit.")
 
 	# Check if user exists
 	def checkUserExists(self):
@@ -81,8 +81,9 @@ class UserManager():
 				continue
 		while True:
 			try:
-				self.userData['protocol'] = input("Which protocol to use ? [default udp/tcp]: ")
-				if(self.userData['protocol'] == 'udp' or self.userData['protocol'] == 'tcp' or self.userData['protocol'].strip() == ''):
+				protocol_input = input("Which protocol to use ? [default udp/tcp]: ")
+				if(protocol_input == 'udp' or protocol_input == 'tcp' or protocol_input.strip() == ''):
+					self.userData['protocol'] = "udp" if protocol_input.strip() == "" else protocol_input
 					break
 			except:
 				print("Incorrect protocol")
