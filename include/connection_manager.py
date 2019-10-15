@@ -165,8 +165,8 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		path = os.getcwd()+"/"+"protonvpn_conf/server.ovpn" 
-		with open(os.getcwd()+"/"+"protonvpn_conf/proton_ovpn_credentials.json") as file:
+		path = self.rootDir+"/"+"protonvpn_conf/server.ovpn" 
+		with open(self.rootDir+"/"+"protonvpn_conf/proton_ovpn_credentials.json") as file:
 			data = json.load(file)
 
 		userdata = data['username'] + "\n" + data['password']
