@@ -10,22 +10,24 @@ class AppEntry():
 		self.showMenu()
 		self.rootDir = os.getcwd()
 		self.connMan = ConnectionManager(self.rootDir)
+		self.userMan = UserManager(self.rootDir)
+		self.serverMan = ServerManger(self.rootDir)
 		self.switch()
 
 	def switch(self):
 		while True:
 			self.choice = int(input("[MAIN MENU] What would you like to do: "))
 			if(self.choice == 1):
-				print(self.connMan.check_requirments())
+				self.connMan.check_requirments()
 				continue
 			elif(self.choice == 2):
-				UserManager(self.rootDir).createUser()
+				self.userMan.createUser()
 				continue
 			elif(self.choice == 3):
-				UserManager(self.rootDir).editUser()
+				self.userMan.editUser()
 				continue
 			elif(self.choice == 4):
-				ServerManger(self.rootDir).collectServerList()
+				self.serverMan.collectServerList()
 				continue
 			elif(self.choice == 5):
 				country = input("Which country to connect to: ")
