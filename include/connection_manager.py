@@ -4,11 +4,12 @@ from include.server_manager import ServerManger
 from include.file_manager import FileManager
 
 class ConnectionManager():
-	def __init__(self, current_working_dir):
+	def __init__(self, rootDir):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-		self.user = UserManager()
-		self.server = ServerManger()
-		self.file = current_working_dir
+		self.rootDir = rootDir
+		self.user = UserManager(self.rootDir)
+		self.server = ServerManger(self.rootDir)
+		self.file = FileManager(self.rootDir)
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
 
@@ -19,7 +20,7 @@ class ConnectionManager():
 		#if self.server.filter_servers_country(string):
 		#serverList = self.file.readFile('servers_in_cache', country_to_check.upper(), 'json')
 		try:
-			with open(os.getcwd()+"/"+"servers_in_cache/"+fileName) as file:
+			with open(self.rootDir+"/"+"servers_in_cache/"+fileName) as file:
 				data = json.load(file)
 				print(data)
 				if(data):

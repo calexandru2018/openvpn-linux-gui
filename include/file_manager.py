@@ -1,8 +1,8 @@
 import os
 
 class FileManager():
-	def __init__(self, dirPath):
-		self.dirPath = dirPath
+	def __init__(self, rootDir):
+		self.rootDir = rootDir
 
 	def returnFileExist(self, folderName, fileName, fileType):
 		'''Checks if file exists in specified folder.
@@ -20,7 +20,7 @@ class FileManager():
 		bool:
 			Returns True if file exists, False otherwise.
 		'''
-		if(os.path.isfile(f"{self.dirPath}/{folderName}/{fileName}.{fileType}")):
+		if(os.path.isfile(f"{self.rootDir}/{folderName}/{fileName}.{fileType}")):
 			return True
 		else:
 			return False
@@ -47,7 +47,7 @@ class FileManager():
 
 		if not self.returnFileExist(folderName, fileName, fileType): 
 			try:
-				newFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "w+")
+				newFile = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "w+")
 				newFile.write(contentToWrite)
 			except:
 				return False
@@ -78,7 +78,7 @@ class FileManager():
 		'''
 		if self.returnFileExist(folderName, fileName, fileType): 
 			try:
-				existingFile = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "a+")
+				existingFile = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "a+")
 				existingFile.write(contentToWrite)
 			except:
 				return False
@@ -107,7 +107,7 @@ class FileManager():
 		'''
 		if self.returnFileExist(folderName, fileName, fileType): 
 			try:
-				file = open(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType, "r")
+				file = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "r")
 				return file.read()
 			except:
 				return False
@@ -135,7 +135,7 @@ class FileManager():
 		'''
 		if self.returnFileExist(folderName, fileName, fileType):  
 			try:
-				os.remove(self.dirPath + "/" + folderName +  "/" + fileName + "." + fileType)
+				os.remove(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType)
 			except:
 				return False
 			else:

@@ -16,19 +16,19 @@ class UserManager():
     askForInput():
         Ask the user for input.
 	'''
-	def __init__(self):
+	def __init__(self, rootDir):
 		self.userData = {'username': '', 'password': '', 'tier': 0, 'protocol': 'udp'}
-		self.dirPath = getcwd()
+		self.rootDir = rootDir
 		self.folderName = 'protonvpn_conf'
 		self.fileName = 'proton_ovpn_credentials'
 		self.fileType = 'json'
-		self.folderManager = FolderManager(self.dirPath)
-		self.fileManager = FileManager(self.dirPath)
+		self.folderManager = FolderManager(self.rootDir)
+		self.fileManager = FileManager(self.rootDir)
 	
 	# Create user
 	def createUser(self):
-		self.askForInput()
 		if not self.checkUserExists():
+			self.askForInput()
 			if self.folderManager.createFolder(self.folderName):
 				if self.fileManager.createFile(self.folderName, self.fileName, self.fileType, json.dumps(self.userData, indent=2)):
 					return True

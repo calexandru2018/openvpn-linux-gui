@@ -4,13 +4,13 @@ from include.file_manager import FileManager
 from include.folder_manager import FolderManager
 
 class ServerManger():
-	def __init__(self):
-		self.dirPath = os.getcwd()
+	def __init__(self, rootDir):
+		self.rootDir = rootDir
 		self.serverList = {}
 		self.serverNameLong = ''
 		self.serverNameShort = ''
-		self.fileManager = FileManager(self.dirPath)
-		self.folderManager = FolderManager(self.dirPath)
+		self.fileManager = FileManager(self.rootDir)
+		self.folderManager = FolderManager(self.rootDir)
 		self.folderName = 'servers_in_cache'
 		self.countryList =  {
 			'AT': 'Austria',
@@ -92,7 +92,7 @@ class ServerManger():
 				self.fileManager.editFile(self.folderName, k, 'json', json.dumps(v, indent=2))
 
 	def filter_servers_country(self, returnCountry):
-		path = self.dirPath + "/" + self.folderName + "/" 
+		path = self.rootDir + "/" + self.folderName + "/" 
 		for root, dirs, files in os.walk(path):
 			#print(,files)
 			#returnCountry = returnCountry.upper() + ".json"

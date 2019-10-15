@@ -8,8 +8,8 @@ from include.connection_manager import ConnectionManager
 class AppEntry():
 	def __init__(self):
 		self.showMenu()
-		self.current_working_dir = os.getcwd()
-		self.connMan = ConnectionManager(self.current_working_dir)
+		self.rootDir = os.getcwd()
+		self.connMan = ConnectionManager(self.rootDir)
 		self.switch()
 
 	def switch(self):
@@ -19,13 +19,13 @@ class AppEntry():
 				print(self.connMan.check_requirments())
 				continue
 			elif(self.choice == 2):
-				UserManager().createUser()
+				UserManager(self.rootDir).createUser()
 				continue
 			elif(self.choice == 3):
-				UserManager().editUser()
+				UserManager(self.rootDir).editUser()
 				continue
 			elif(self.choice == 4):
-				ServerManger().collectServerList()
+				ServerManger(self.rootDir).collectServerList()
 				continue
 			elif(self.choice == 5):
 				country = input("Which country to connect to: ")
