@@ -1,46 +1,54 @@
-import subprocess, requests, re, os, signal, json, pprint
+import subprocess, requests, re, os, signal, json, pprint, time
 from include.user_manager import UserManager
-from include.server_manager import ServerManger
 from include.file_manager import FileManager
 
 class ConnectionManager():
 	def __init__(self, rootDir):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 		self.rootDir = rootDir
-		self.user = UserManager(self.rootDir)
-		self.server = ServerManger(self.rootDir)
-		self.file = FileManager(self.rootDir)
+		self.user_manager = UserManager(self.rootDir)
+		self.file_manager = FileManager(self.rootDir)
+		self.fileType = 'json'
+		self.platform = 'linux'
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
+		self.actual_ip = ''
+		self.new_ip = ''
 
-	def generate_ovpn_file(self, country_to_check):
-		highestScore = 0
-		connectToID = ''
-		fileName = country_to_check.upper() + ".json"
-		#if self.server.filter_servers_country(string):
-		#serverList = self.file.readFile('servers_in_cache', country_to_check.upper(), 'json')
+	def generate_ovpn_file(self):
+		'''Generates OVPN files
+		
+		Tier 0(1) = Free
+		Tier 1(2) = Basic
+		Tier 2(3) = Plus
+		Tier 3(4) = Visionary
+		
+		Feature 1: Secure Core
+		Feature 2: Tor
+		Feature 4: P2P
+		Feature 8: XOR (not in use)
+		Feature 16: IPV6 (not in use)
+		'''
+
 		try:
-			with open(self.rootDir+"/"+"servers_in_cache/"+fileName) as file:
+			country = input("Which country to connect to: ")
+			path = self.rootDir+"/"+"servers_in_cache/"+country.upper() + "."+ self.fileType
+			with open(path) as file:
 				data = json.load(file)
-				print(data)
-				if(data):
-					for server in data['serverList']:
-						#print(data['serverList'][server]['score'],'SERVER_:_______')
-						if data['serverList'][server]['score'] >= highestScore:
-							highestScore = data['serverList'][server]['score']
-							connectToID = data['serverList'][server]['id']
-					connectInfo = (connectToID, highestScore)
-					print(connectInfo)
-					url = "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID="+connectInfo[0]+"&Protocol=udp"
-					print(url)
-					serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
-					if self.file.returnFileExist("protonvpn_conf", "server", "ovpn"):
-						self.file.deleteFile("protonvpn_conf", "server", "ovpn")
-					if self.file.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
-						print("information saved")
-						return True
+
+			connectInfo = self.auto_select_optimal_server(data)
+			user_selected_protocol = json.loads(self.user_manager.read_user_data())
+
+			url = "https://api.protonmail.ch/vpn/config?Platform=" + self.platform + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
+			
+			serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
+			if self.file_manager.returnFileExist("protonvpn_conf", "server", "ovpn"):
+				self.file_manager.deleteFile("protonvpn_conf", "server", "ovpn")
+			if self.file_manager.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
+				print("An ovpn file has bee created, try to establish a connection now.")
+				return True
 		except FileNotFoundError:
-			print("There is no such country")
+			print("There is no such country, maybe servers were not cached ?")
 		
 	def check_requirments(self):
 		allReqCheck = 6
@@ -50,7 +58,7 @@ class ConnectionManager():
 			'is_profile_initialized': {'name': 'Your profile is initialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
 			'is_openvpn_installed': {'name': 'OpenVPN is installed', 'return':self.is_openvpn_installed()}, 
 			'is_open_resolv_installed': {'name': 'Open Resolv installed', 'return': self.is_open_resolv_installed('/etc/', 'resolv.conf')},
-			'is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
+			'is_is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.is_update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
 		}
 		for check in checker:
 			if not checker[check]['return']:
@@ -69,23 +77,23 @@ class ConnectionManager():
 			2 - Returns True if no user was found and a new one was configured/initialized.
 			3 - Returns False if it was unable to configure/initialize a new user. 
 		'''
-		if self.user.checkUserExists():
+		if self.user_manager.check_if_user_exist():
 			#print("User exists")
 			return True
 		else:
 			if(requirments_check == False):
 				userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
 				if(userChoice[0].lower() == 'y'):
-					if self.user.createUser():
-						#print("User created succesfully!")
+					if self.user_manager.create_server_conf() and self.user_manager.create_user_credentials():
+						print("User created succesfully!")
 						return True
-					#print("Unable to create user")
+					print("Unable to create user")
 					return False
 			else:
 				return False
  
- 	# check for ip: check_ip()
-	def check_ip(self):
+ 	# check for ip: get_ip()
+	def get_ip(self):
 		'''Gets the host IP from two different sources and compares them.
 		
 		Returns:
@@ -98,7 +106,7 @@ class ConnectionManager():
 		protonRequest = requests.get(self.ipProtonCheckUrl, headers={'User-Agent': 'Custom'}).json()
 		if dyndnsIp == protonRequest['IP']:
 			#print("Internet is OK and your IP is:", dyndnsIp)
-			return True
+			return protonRequest['IP']
 		return False
 
 	# check if there is internet connection: is_internet_working_normally()
@@ -110,7 +118,7 @@ class ConnectionManager():
 		Bool:
 			True if ther is internet connection, False otherwise.
 		'''
-		if self.check_ip():
+		if self.get_ip():
 			return True
 		return False
 
@@ -147,7 +155,6 @@ class ConnectionManager():
 	def check_python_version(self):
 		pythonVersion = self.cmdCommand(["python", "--version"])
 		if pythonVersion.split(' ')[1] > '3.3':
-			#print("Your Python version: ", pythonVersion)
 			return True
 		return False
 
@@ -158,45 +165,45 @@ class ConnectionManager():
 		return False
 	
 	# check for update_resolv_conf()
-	def update_resolv_conf_installed(self, path, fileName):
+	def is_update_resolv_conf_installed(self, path, fileName):
 		if self.find(path, fileName):
 			return True
 		return False
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		path = self.rootDir+"/"+"protonvpn_conf/server.ovpn" 
-		with open(self.rootDir+"/"+"protonvpn_conf/proton_ovpn_credentials.json") as file:
-			data = json.load(file)
-
-		userdata = data['username'] + "\n" + data['password']
-		print(userdata)
-		var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		config_path = self.rootDir+"/"+"protonvpn_conf/server.ovpn" 
+		credentials_path = self.rootDir+"/"+self.user_manager.folder_name+"/."+self.user_manager.file_user_credentials_type 
+		
+		self.new_ip = self.get_ip()
+		
+		var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		var.wait()
+		self.ip_swap()
 		# use sudo systemctl enable openvpn-client@server.service; server is the filename and it should en in .conf
 
 	# disconnect from open_vpn: openvpn_disconnect()
 	def openvpn_disconnect(self):
 		getPID = self.cmdCommand(["pgrep", "openvpn"])
+		
+		self.new_ip = self.get_ip()
+		
 		var = subprocess.Popen(["sudo", "kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		var.wait()
-
-	# install update_resolv_conf: install_update_resolv_conf()
-
-	# manage IPV6: manage_ipv6()
-
-	# modify DNS: modify_dns() - NOT PRIO
-
-	# initialize CLI: init_cli()
-
-	#check requirments: check_requirements()
-		# check if openvpn is installed - done
-		# check if python/version is installed - done
-		# check for sysctl (identify why ?)
-		# check for sha512_sum - not needed
-		# check if update-resolv-conf is installed
+		
+		self.ip_swap()
 
 	# Helper methods
+	def auto_select_optimal_server(self, data):
+		highestScore = 0
+		connectToID = ''
+		for server in data['serverList']:
+			if (data['serverList'][server]['score'] >= highestScore) and (int(data['serverList'][server]['tier']) == 1):
+				highestScore = data['serverList'][server]['score']
+				connectToID = data['serverList'][server]['id']
+		connectInfo = (connectToID, highestScore)
+		return connectInfo
+
 	def decodeToASCII(self, byteValue):
 		if byteValue:
 			return byteValue.decode('ascii')
@@ -214,3 +221,26 @@ class ConnectionManager():
 				#print(file, os.path.join(root, file))
 				return True
 		return False
+
+	def ip_swap(self):
+		time.sleep(25)
+		if self.is_internet_working_normally() and (self.actual_ip != self.new_ip):
+			self.actual_ip = self.new_ip
+			self.new_ip = 0
+			print("You are connected")
+		else:
+			print("Some error ocurred while connecting")
+
+
+	# install update_resolv_conf: install_update_resolv_conf()
+
+	# manage IPV6: manage_ipv6()
+
+	# modify DNS: modify_dns() - NOT PRIO
+
+	#check requirments: check_requirements()
+		# check if openvpn is installed - done
+		# check if python/version is installed - done
+		# check for sysctl (identify why ?)
+		# check for sha512_sum - not needed
+		# check if update-resolv-conf is installed - done
