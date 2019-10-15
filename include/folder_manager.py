@@ -1,4 +1,4 @@
-import os
+import os, shutil
 
 class FolderManager():
 	def __init__(self, dirPath):
@@ -14,22 +14,29 @@ class FolderManager():
 		if not self.returnFolderExist(folderName): 
 			try:
 				os.mkdir(self.dirPath + "/" + folderName)
+				return True
 			except:
 				return False
-			else:
-				return True
 		else:
 			return False
 
 	def deleteFolder(self, folderName):
 		if self.returnFolderExist(folderName): 
-			
 			try:
 				os.rmdir(self.dirPath + "/" + folderName)
+				return True
 			except:
 				return False
-			else:
+		else:
+			return False
+
+	def delete_folder_recursive(self, folderName):
+		if self.returnFolderExist(folderName): 
+			try:
+				shutil.rmtree(self.dirPath + "/" + folderName)
 				return True
+			except:
+				return False
 		else:
 			return False
 
