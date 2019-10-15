@@ -112,7 +112,7 @@ class FileManager():
 			except:
 				return False
 			else:
-				existingFile.close()
+				file.close()
 		else:
 			return False
 
