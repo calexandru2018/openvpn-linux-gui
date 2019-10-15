@@ -8,12 +8,13 @@ class ConnectionManager():
 		self.rootDir = rootDir
 		self.user_manager = UserManager(self.rootDir)
 		self.file_manager = FileManager(self.rootDir)
-		self.fileType = 'json'
-		self.platform = 'linux'
+		self.fileType = "json"
+		self.platform = "linux"
+		self.ovpn_file = ("server_conf", "ovpn")
 		self.ipDyndnsCheckUrl = "http://checkip.dyndns.org"
 		self.ipProtonCheckUrl = "https://api.protonmail.ch/vpn/location"
-		self.actual_ip = ''
-		self.new_ip = ''
+		self.actual_ip = ""
+		self.new_ip = ""
 
 	def generate_ovpn_file(self):
 		'''Generates OVPN files
@@ -42,9 +43,9 @@ class ConnectionManager():
 			url = "https://api.protonmail.ch/vpn/config?Platform=" + self.platform + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
 			
 			serverReq = requests.get(url, headers={'User-Agent': 'Custom'})
-			if self.file_manager.returnFileExist("protonvpn_conf", "server", "ovpn"):
-				self.file_manager.deleteFile("protonvpn_conf", "server", "ovpn")
-			if self.file_manager.createFile("protonvpn_conf", "server", "ovpn", serverReq.text):
+			if self.file_manager.returnFileExist("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1]):
+				self.file_manager.deleteFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1])
+			if self.file_manager.createFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1], serverReq.text):
 				print("An ovpn file has bee created, try to establish a connection now.")
 				return True
 		except FileNotFoundError:
@@ -172,14 +173,14 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		config_path = self.rootDir+"/"+"protonvpn_conf/server.ovpn" 
+		config_path = self.rootDir+"/"+self.user_manager.folder_name+"/"+self.ovpn_file[0]+"."+self.ovpn_file[1]
 		credentials_path = self.rootDir+"/"+self.user_manager.folder_name+"/."+self.user_manager.file_user_credentials_type 
 		
 		self.new_ip = self.get_ip()
 		
 		var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		var.wait()
-		self.ip_swap()
+		self.ip_swap("You are now connected.")
 		# use sudo systemctl enable openvpn-client@server.service; server is the filename and it should en in .conf
 
 	# disconnect from open_vpn: openvpn_disconnect()
@@ -189,9 +190,12 @@ class ConnectionManager():
 		self.new_ip = self.get_ip()
 		
 		var = subprocess.Popen(["sudo", "kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		
+		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
+		#var = subprocess.Popen(["sudo", "kill", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		var.wait()
 		
-		self.ip_swap()
+		self.ip_swap("You are now disconnected.")
 
 	# Helper methods
 	def auto_select_optimal_server(self, data):
@@ -222,14 +226,14 @@ class ConnectionManager():
 				return True
 		return False
 
-	def ip_swap(self):
-		time.sleep(25)
+	def ip_swap(self, message):
+		#time.sleep(25)
 		if self.is_internet_working_normally() and (self.actual_ip != self.new_ip):
 			self.actual_ip = self.new_ip
 			self.new_ip = 0
-			print("You are connected")
+			print(message)
 		else:
-			print("Some error ocurred while connecting")
+			print("An error occurred.")
 
 
 	# install update_resolv_conf: install_update_resolv_conf()
