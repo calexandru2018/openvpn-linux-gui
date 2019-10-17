@@ -43,7 +43,7 @@ class AppEntry():
 				self.connMan.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				self.connMan.start_on_boot()
+				self.connMan.enable_vpn_on_boot()
 				continue
 			elif(self.choice == 9):
 				self.connMan.modify_dns()
@@ -55,7 +55,7 @@ class AppEntry():
 				print("Exit program\n")
 				break
 			else:
-				print("Wrong answer")
+				print("Wrong choice, try again.")
 				continue
 			self.showMenu()
 
