@@ -11,6 +11,7 @@ class FolderManager():
 			return False
 
 	def createFolder(self, folderName):
+		#print("Folder created in : ", self.dirPath + "/" + folderName)
 		if not self.returnFolderExist(folderName): 
 			try:
 				os.mkdir(self.dirPath + "/" + folderName)

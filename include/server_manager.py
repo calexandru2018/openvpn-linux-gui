@@ -4,14 +4,14 @@ from include.file_manager import FileManager
 from include.folder_manager import FolderManager
 
 class ServerManager():
-	def __init__(self, rootDir):
+	def __init__(self, rootDir, server_man_folder_name):
 		self.rootDir = rootDir
 		self.serverList = {}
 		self.serverNameLong = ''
 		self.serverNameShort = ''
 		self.fileManager = FileManager(self.rootDir)
 		self.folderManager = FolderManager(self.rootDir)
-		self.folderName = 'servers_in_cache'
+		self.folderName = server_man_folder_name
 		self.countryList =  {
 			'AT': 'Austria',
 			'AU': 'Australia',

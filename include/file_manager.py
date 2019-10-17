@@ -47,8 +47,10 @@ class FileManager():
 		'''
 
 		if not self.returnFileExist(folderName, fileName, fileType): 
+			path = self.rootDir + "/" + folderName
+			#print(path)
 			try:
-				newFile = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "w+")
+				newFile = open(path +  "/" + fileName + "." + fileType, "w+")
 				newFile.write(contentToWrite)
 			except:
 				return False

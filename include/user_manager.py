@@ -21,11 +21,11 @@ class UserManager():
 	read_user_data():
 		Reads user generated files by create_server_conf() and create_user_credentials()
 	'''
-	def __init__(self, rootDir):
+	def __init__(self, rootDir, user_man_folder_name):
 		self.user_server_conf = {'tier': 0, 'protocol': 'udp'}
 		self.user_credentials = {'username': '', 'password': ''}
 		self.rootDir = rootDir
-		self.folder_name = 'protonvpn_conf'
+		self.folder_name = user_man_folder_name
 		self.file_server_config_name = 'user_pref'
 		self.file_server_config_type = 'json'
 		self.file_user_credentials_type = 'user_credentials' # It is actually .user_credentials but I already take care of the dot inside the FileManager() class
