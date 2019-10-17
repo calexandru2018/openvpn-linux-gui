@@ -58,7 +58,7 @@ class ServerManager():
 		#self.collectServerList()
 	
 	def collectServerList(self):
-		serverReq = requests.get("https://api.protonmail.ch/vpn/logicals", headers={'User-Agent': 'Custom'}).json()
+		serverReq = requests.get("https://api.protonmail.ch/vpn/logicals", headers={"x-pm-appversion": "Other", "x-pm-apiversion": "3", "Accept": "application/vnd.protonmail.v1+json"}).json()
 		for server in serverReq['LogicalServers']:
 			if server['EntryCountry'] in self.countryList:
 				self.serverNameLong = self.countryList[server['EntryCountry']]
