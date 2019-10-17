@@ -25,7 +25,6 @@ class ConnectionManager():
 	def modify_dns(self, restore_original_dns=False):
 		print("Modifying dns")
 		resolv_conf_path = False
-		#cmd = self.cmd_command("su")
 		for root, dirs, files in os.walk("/etc/"):
 			if "resolv.conf" in files:
 				resolv_conf_path = os.path.join(root, "resolv.conf")
@@ -262,12 +261,12 @@ class ConnectionManager():
 			return byteValue.decode('ascii')
 		return False
 
-	def cmd_command(self, *args, return_output=True):
+	def cmd_command(self, *args, return_output=True, as_sudo=False):
 		try:
-			if(not return_output and subprocess.Popen(args[0], stdout=subprocess.PIPE)):
+			if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE)):
 				return True
 			else:
-				return self.decodeToASCII(subprocess.Popen(args[0], stdout=subprocess.PIPE).communicate()[0]).strip()
+				return self.decodeToASCII(subprocess.run(args[0], stdout=subprocess.PIPE).communicate()[0]).strip()
 		except:
 			return False
 
@@ -292,16 +291,17 @@ class ConnectionManager():
 	def cache_servers(self):
 		self.server_manager.collectServerList()
 
-	def start_on_boot(self):
-		# will work specifically on manjaro
-		self.generate_ovpn_for_boot()
-		# if self.generate_ovpn_for_boot():
-		# 	fileName = "openvpn-client@"+self.ovpn_file[0]+".service"
-		# 	var = subprocess.Popen(["systemctl", "enable", fileName], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		# 	var.wait()
+	def enable_vpn_on_boot(self):
+		if self.generate_ovpn_for_boot():
+			fileName = "openvpn-client@"+self.ovpn_file[0]
+			print("systemctl enable",fileName)
+			try:
+				subprocess.run(["systemctl", "enable", fileName])
+				print("\nLaunch on boot enabled\n")
+			except:
+				print("Cant enable launch on boot")
 
 	def generate_ovpn_for_boot(self):
-		# try:
 		country = input("Which country to connect to: ")
 		path = self.rootDir+"/"+"servers_in_cache/"+country.upper() + "."+ self.fileType
 			
@@ -312,37 +312,43 @@ class ConnectionManager():
 		user_selected_protocol = json.loads(self.user_manager.read_user_data())
 
 		url = "https://api.protonmail.ch/vpn/config?Platform=" + self.platform + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
-
-		server_req = requests.get(url, headers={'User-Agent': 'Custom'})
-
+		server_req = requests.get(url, headers={"x-pm-appversion": "Other", "x-pm-apiversion": "3", "Accept": "application/vnd.protonmail.v1+json"})
 		original_req = server_req.text
-		#print(original_req.find("auth-user-pass"))
-		modified_request = original_req[:1699] + " /opt/.user_credentials" + original_req[1699:]
-		#print(modified_request)
-		# WILL ONLY WORK IF THE GENERATED FILS IS WITHIN /OPT/[OPTIONAL NAME]
-		newFile = open("/etc/openvpn/client/"+self.ovpn_file[0]+".conf", "w")
-		newFile.write(modified_request)
+		start_index = original_req.find("auth-user-pass")
+		modified_request = original_req[:start_index+14] + " /opt/protonvpn-gui-linux/.user_credentials" + original_req[start_index+14:]
+		print(original_req, modified_request)
+		resolv_conf_path = False
+		try:
+			append_to_file = "cat > /etc/openvpn/client/"+self.ovpn_file[0]+".conf <<EOF "+modified_request+"\nEOF"
+			subprocess.run(["sudo", "bash", "-c", append_to_file])
+			print("Created new file in /openvpn/client/")
+		except:
+			print("Unable to create")
 
-		# except IOError:
-		# 	print("Unable to create file", IOError)
-		# 	return False
-			
-		# 	if self.file_manager.returnFileExist("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1]):
-		# 		self.file_manager.deleteFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1])
-		# 	if self.file_manager.createFile("protonvpn_conf", self.ovpn_file[0], self.ovpn_file[1], serverReq.text):
-		# 		print("An ovpn file has bee created, try to establish a connection now.")
-		# 		return True
-		# except FileNotFoundError:
-		# 	print("There is no such country, maybe servers were not cached ?")
+		for root, dirs, files in os.walk("/opt/"):
+			if ".user_credentials" in dirs:
+				resolv_conf_path = os.path.join(root, ".user_credentials")
+		if(not resolv_conf_path):
+			self.copy_credentials()
+			return True
+		else:
+			return False
+	
+
+	def copy_credentials(self):
+		cmds = ["mkdir /opt/protonvpn-gui-linux/", "cp " + self.rootDir + "/" + self.user_man_folder_name + "/.user_credentials /opt/protonvpn-gui-linux/"]
+		try:
+			if(not os.path.isdir("/opt/protonvpn-gui-linux/")):
+				for cmd in cmds:
+					subprocess.run(["sudo", "bash", "-c", cmd])
+			else:
+				subprocess.run(["sudo", "bash", "-c", cmds[1]])
+			print("Copied credentials")
+			return True
+		except:
+				print("Unable to copy credentials")
+				return False
 
 	# install update_resolv_conf: install_update_resolv_conf()
 
 	# manage IPV6: manage_ipv6()
-
-
-	#check requirments: check_requirements()
-		# check if openvpn is installed - done
-		# check if python/version is installed - done
-		# check for sysctl (identify why ?)
-		# check for sha512_sum - not needed
-		# check if update-resolv-conf is installed - done
