@@ -9,6 +9,8 @@ Until the software reaches a solid CLI conversion based on ProtonVPN own CLI, th
 
 Setup:
 ======
+**Make sure that you have python 3.5 =< installed on your system.**
+
 `git clone https://github.com/calexandru2018/protonvpn-linux-gui.git`
 
 `cd protonvpn-linux-gui`
