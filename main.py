@@ -67,7 +67,7 @@ class AppEntry():
 				continue
 			elif(self.choice == 14):
 				#self.connMan.restart_on_boot_service()
-				self.connMan.manage_ipv6()
+				self.connMan.manage_ipv6(disable_ipv6=False)
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")

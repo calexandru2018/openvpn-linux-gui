@@ -228,7 +228,7 @@ class ConnectionManager():
 		
 		print("Connecting to vpn server...")
 		if self.get_ip():
-			if self.modify_dns():
+			if self.modify_dns() and self.manage_ipv6(disable_ipv6=True):
 				var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				var.wait()
 				self.ip_swap("connect")
@@ -250,7 +250,7 @@ class ConnectionManager():
 		print("Disconnecting from vpn server...")
 		if getPID:
 			self.new_ip = self.get_ip()
-			if self.modify_dns(restore_original_dns=True):
+			if self.modify_dns(restore_original_dns=True) and self.manage_ipv6(disable_ipv6=False):
 				var = subprocess.Popen(["sudo", "kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
 				#var = subprocess.Popen(["sudo", "kill", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -282,7 +282,12 @@ class ConnectionManager():
 			return True
 		else:
 			try:
-				x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				if as_sudo:
+					args[0].insert(0, "sudo")
+					x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				else:
+					x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
 				return self.decodeToASCII(x.stdout).strip()
 			except:
 				return False
@@ -395,25 +400,41 @@ class ConnectionManager():
 	# install update_resolv_conf: install_update_resolv_conf()
 
 	# manage IPV6: manage_ipv6()
-	def manage_ipv6(self):
+	def manage_ipv6(self, disable_ipv6):
 		ipv6 = False
-		print("Manage IPV6")
-		x = self.cmd_command(["ip", "-6", "a"])
-		#print(x)
-		match_dec = re.findall("[0-9]: ", x)
-		#print(match_dec)
-		match_ipv6 = re.match("fe80::[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}/[0-9]{2}", x)
+		netmask = False
+		enable_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=1"]
+		enable_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"]
+		if not disable_ipv6:
+			with open(self.user_man_folder_name+"/.ipv6_backup", "r") as file:
+				content = file.read().split()
+			enable_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
+			enable_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=0"]
+			if self.cmd_command(enable_default, as_sudo=True) and self.cmd_command(enable_all, as_sudo=True) and self.cmd_command(["ip", "addr", "add", content[1] , "dev", content[0]],  as_sudo=True):
+				print("IPV6 Restored and linklocal restored.")
+				return True
+			print("Did not manage to restore IPV6, needs to be restored manually.")
+			return False
+
+
 		interfaces = netifaces.interfaces()
-		print(netifaces.AF_LINK)
 		for interface in interfaces:
 			confs = netifaces.ifaddresses(interface)
 			addrs = confs[netifaces.AF_INET6]
 			for address in addrs:
-				# print(address['addr'])
-				# print(address['netmask'])
 				ipv6 = re.match("fe80::[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}", address['addr'])
-				if ipv6 != "None":
-					print(ipv6)
-				print("\n")
-			# print(addrs[netifaces.AF_INET6][0]['netmask'])
-			# print(addrs[netifaces.AF_INET6][0]['addr'])
+				if ipv6:
+					interface_to_save = interface
+					netmask = address['netmask'].split("::")[1]
+					ipv6 = ipv6.group(0)
+					break
+		if ipv6 and netmask:
+			if self.file_manager.returnFileExist(self.user_man_folder_name, "", ".ipv6_backup"):	
+				self.file_manager.deleteFile(self.user_man_folder_name, "", ".ipv6_backup")
+			with open(self.user_man_folder_name+"/.ipv6_backup", "w") as file:
+				file.write(interface_to_save+" "+ ipv6+netmask)
+				if self.cmd_command(enable_default, as_sudo=True) and self.cmd_command(enable_all, as_sudo=True):
+					print("IPV6 disabled.")
+					return True
+		else:
+			return False
