@@ -1,4 +1,4 @@
-import json
+import json, getpass
 
 from include.folder_manager import FolderManager
 from include.file_manager import FileManager
@@ -132,7 +132,7 @@ class UserManager():
 
 	def ask_for_user_credentials(self):
 		self.user_credentials['username']  = input("Type in your username: ")
-		self.user_credentials['password'] = input("Type in your password: ")
+		self.user_credentials['password'] = getpass.getpass("Type in your password: ")
 
 	# Ask the user for input
 	def ask_for_server_config(self):
