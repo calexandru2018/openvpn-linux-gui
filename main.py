@@ -43,16 +43,27 @@ class AppEntry():
 				self.connMan.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				self.connMan.enable_vpn_on_boot()
+				#self.connMan.enable_vpn_on_boot()
+				self.connMan.openvpn_service_manager("enable")
 				continue
 			elif(self.choice == 9):
+				#self.connMan.enable_vpn_on_boot()
+				self.connMan.openvpn_service_manager("disable")
+				print("Disable start on boot")
+				continue
+			elif(self.choice == 10):
 				self.connMan.modify_dns()
 				continue
-			elif(self.choice == 99):
+			elif(self.choice == 11):
 				self.connMan.modify_dns(restore_original_dns=True)
 				continue
-			elif(self.choice == 999):
-				self.connMan.restart_on_boot_service()
+			elif(self.choice == 12):
+				#self.connMan.restart_on_boot_service()
+				self.connMan.openvpn_service_manager("restart")
+				continue
+			elif(self.choice == 13):
+				#self.connMan.restart_on_boot_service()
+				self.connMan.restart_network_manager()
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -63,9 +74,19 @@ class AppEntry():
 			self.showMenu()
 
 	def showMenu(self):
-		print("---------------------------------------------------------")
-		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Start on boot\n\t[9] - Modify DNS\n\t[99] - Restore original DNS\n\t[999] - Restart On Boot service\n\t[0] - Exit")
-		print("---------------------------------------------------------")
+		print("--------------------------------------------------------------------------------------")
+		print("""
+		[1] - Check Requirments\t\t [8] - Start on boot
+		[2] - Create user\t\t [9] - Disable start on boot
+		[3] - Edit User\t\t\t [10] - Modify DNS
+		[4] - Cache Servers\t\t [11] - Restore original DNS
+		[5] - Generate OPVN file\t [12] - Restart On Boot service
+		[6] - OpenVPN Connect\t\t [14] - Restart NetworkManager
+		[7] - OpenVPN Disconnect\t\t
+		
+			
+		[0] - Exit""")
+		print("--------------------------------------------------------------------------------------")
 
 if __name__ == '__main__':
 	AppEntry()
