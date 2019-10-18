@@ -1,4 +1,4 @@
-import subprocess, requests, re, os, signal, json, pprint, shutil, time
+import subprocess, requests, re, os, signal, json, pprint, shutil, time, netifaces
 from include.user_manager import UserManager
 from include.file_manager import FileManager
 from include.folder_manager import FolderManager
@@ -396,4 +396,24 @@ class ConnectionManager():
 
 	# manage IPV6: manage_ipv6()
 	def manage_ipv6(self):
+		ipv6 = False
 		print("Manage IPV6")
+		x = self.cmd_command(["ip", "-6", "a"])
+		#print(x)
+		match_dec = re.findall("[0-9]: ", x)
+		#print(match_dec)
+		match_ipv6 = re.match("fe80::[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}/[0-9]{2}", x)
+		interfaces = netifaces.interfaces()
+		print(netifaces.AF_LINK)
+		for interface in interfaces:
+			confs = netifaces.ifaddresses(interface)
+			addrs = confs[netifaces.AF_INET6]
+			for address in addrs:
+				# print(address['addr'])
+				# print(address['netmask'])
+				ipv6 = re.match("fe80::[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}", address['addr'])
+				if ipv6 != "None":
+					print(ipv6)
+				print("\n")
+			# print(addrs[netifaces.AF_INET6][0]['netmask'])
+			# print(addrs[netifaces.AF_INET6][0]['addr'])
