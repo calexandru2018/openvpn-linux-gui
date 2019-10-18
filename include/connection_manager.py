@@ -339,35 +339,6 @@ class ConnectionManager():
 		except:
 			print("Cant restart network manager")
 
-	# def enable_vpn_on_boot(self):
-	# 	if self.generate_ovpn_for_boot():
-	# 		print("systemctl enable",self.on_boot_process_name)
-	# 		try:
-	# 			subprocess.run(["systemctl", "enable", self.on_boot_process_name])
-	# 			FolderManager(self.rootDir).delete_folder_recursive(self.server_manager.folderName)
-	# 			print("\nLaunch on boot enabled\n")
-	# 		except:
-	# 			print("Cant enable launch on boot")
-
-	# def restart_on_boot_service(self):
-	# 	print("systemctl enable",self.on_boot_process_name)
-	# 	try:
-	# 		subprocess.run(["systemctl", "restart", self.on_boot_process_name])
-	# 		FolderManager(self.rootDir).delete_folder_recursive(self.server_manager.folderName)
-	# 		print("\nRestart Successfull\n")
-	# 	except:
-	# 		print("Cant restart service")
-
-	# # disable start on boot
-	# def disable_start_on_boot(self):
-	# 	print("systemctl enable",self.on_boot_process_name)
-	# 	try:
-	# 		subprocess.run(["systemctl", "disable", fileName])
-	# 		FolderManager(self.rootDir).delete_folder_recursive(self.server_manager.folderName)
-	# 		print("\nLaunch on boot disabled\n")
-	# 	except:
-	# 		print("Cant disable launch on boot")
-
 	def generate_ovpn_for_boot(self):
 		country = input("Which country to connect to: ")
 		path = self.rootDir+"/"+"servers_in_cache/"+country.upper() + "."+ self.fileType
