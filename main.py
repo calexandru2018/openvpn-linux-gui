@@ -65,6 +65,10 @@ class AppEntry():
 				#self.connMan.restart_on_boot_service()
 				self.connMan.restart_network_manager()
 				continue
+			elif(self.choice == 14):
+				#self.connMan.restart_on_boot_service()
+				self.connMan.manage_ipv6()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -90,8 +94,8 @@ class AppEntry():
 	[3] - Edit User\t\t\t [10] - Modify DNS (OVPN should fix it automatically)
 	[4] - Cache Servers\t\t [11] - Restore original DNS
 	[5] - Generate OPVN file\t [12] - Restart "start on boot" service
-	[6] - OpenVPN Connect\t\t [14] - Restart NetworkManager
-	[7] - OpenVPN Disconnect\t\t
+	[6] - OpenVPN Connect\t\t [13] - Restart NetworkManager
+	[7] - OpenVPN Disconnect\t [14] - Manage IPV6[Work in progress]
 		
 			
 	[0] - Exit""")
