@@ -51,6 +51,9 @@ class AppEntry():
 			elif(self.choice == 99):
 				self.connMan.modify_dns(restore_original_dns=True)
 				continue
+			elif(self.choice == 999):
+				self.connMan.restart_on_boot_service()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -61,7 +64,7 @@ class AppEntry():
 
 	def showMenu(self):
 		print("---------------------------------------------------------")
-		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Start on boot\n\t[9] - Modify DNS\n\t[99] - Restore original DNS\n\t[0] - Exit")
+		print("\t[1] - Check Requirments\n\t[2] - Create user\n\t[3] - Edit User\n\t[4] - Cache Servers\n\t[5] - Generate OPVN file\n\t[6] - OpenVPN Connect\n\t[7] - OpenVPN Disconnect\n\t[8] - Start on boot\n\t[9] - Modify DNS\n\t[99] - Restore original DNS\n\t[999] - Restart On Boot service\n\t[0] - Exit")
 		print("---------------------------------------------------------")
 
 if __name__ == '__main__':

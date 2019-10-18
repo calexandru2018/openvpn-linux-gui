@@ -297,6 +297,7 @@ class ConnectionManager():
 			print("systemctl enable",fileName)
 			try:
 				subprocess.run(["systemctl", "enable", fileName])
+				FolderManager(self.rootDir).delete_folder_recursive(self.server_manager.folderName)
 				print("\nLaunch on boot enabled\n")
 			except:
 				print("Cant enable launch on boot")
@@ -334,6 +335,16 @@ class ConnectionManager():
 		else:
 			return False
 	
+
+	def restart_on_boot_service(self):
+		fileName = "openvpn-client@"+self.ovpn_file[0]
+		print("systemctl enable",fileName)
+		try:
+			subprocess.run(["systemctl", "restart", fileName])
+			FolderManager(self.rootDir).delete_folder_recursive(self.server_manager.folderName)
+			print("\nRestart Successfull\n")
+		except:
+			print("Cant restart service")
 
 	def copy_credentials(self):
 		cmds = ["mkdir /opt/protonvpn-gui-linux/", "cp " + self.rootDir + "/" + self.user_man_folder_name + "/.user_credentials /opt/protonvpn-gui-linux/"]
