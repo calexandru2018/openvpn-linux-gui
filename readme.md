@@ -1,12 +1,13 @@
 # protonvpn-linux-gui [alpha v.1]
 A GUI that improves the UX of ProtonVPN (should ready by alpha v2), developed by me.
 
-## Actual situation:
+Actual Situation:
+======
 Until the software reaches a solid CLI conversion based on ProtonVPN own CLI, the only way to interact with it will be through this version of CLI.
 
 **NOTE:** This is a work in progress, occasional bugs or issues may occur. Since the work is not packaged, you'll have to download it from github and (preferably) clone it into your /home/[user]/ folder. 
 
-Setup
+Setup:
 ======
 `git clone https://github.com/calexandru2018/protonvpn-linux-gui.git`
 
@@ -14,7 +15,7 @@ Setup
 
 either `python3 main.py` or `python main.py` depending on your version.
 
-Available Commands Explanation
+Available Commands Explanation:
 ======
 As of the moment, there are 14 commands you can give to the CLI:
 
