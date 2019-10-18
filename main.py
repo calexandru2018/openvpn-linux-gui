@@ -76,25 +76,25 @@ class AppEntry():
 	def showMenu(self):
 		print("--------------------------------------------------------------------------------------")
 		print("""
-		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		!!!!                                                !!!!   
-		!!!!	       Made by Alexandru Cheltuitor         !!!!
-		!!!!                                                !!!!
-		!!!!	        ProtonVPN Unofficial CLI            !!!!
-		!!!!                   Alpha v.1                    !!!!
-		!!!!                                                !!!! 
-		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		
-		[1] - Check Requirments\t\t [8] - Start on boot
-		[2] - Create user\t\t [9] - Disable start on boot
-		[3] - Edit User\t\t\t [10] - Modify DNS
-		[4] - Cache Servers\t\t [11] - Restore original DNS
-		[5] - Generate OPVN file\t [12] - Restart On Boot service
-		[6] - OpenVPN Connect\t\t [14] - Restart NetworkManager
-		[7] - OpenVPN Disconnect\t\t
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	!!!!                                                !!!!   
+	!!!!	       Made by Alexandru Cheltuitor         !!!!
+	!!!!                                                !!!!
+	!!!!	        ProtonVPN Unofficial CLI            !!!!
+	!!!!                   Alpha v.1                    !!!!
+	!!!!                                                !!!! 
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	[1] - Check Requirments\t\t [8] - Enable "start on boot" service
+	[2] - Create user\t\t [9] - Disable "start on boot" service
+	[3] - Edit User\t\t\t [10] - Modify DNS (OVPN should fix it automatically)
+	[4] - Cache Servers\t\t [11] - Restore original DNS
+	[5] - Generate OPVN file\t [12] - Restart "start on boot" service
+	[6] - OpenVPN Connect\t\t [14] - Restart NetworkManager
+	[7] - OpenVPN Disconnect\t\t
 		
 			
-		[0] - Exit""")
+	[0] - Exit""")
 		print("--------------------------------------------------------------------------------------")
 
 if __name__ == '__main__':
