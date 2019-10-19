@@ -2,8 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-servers_in_cache
-protonvpn_conf
+user_conf
+cache
 
 # C extensions
 *.so
