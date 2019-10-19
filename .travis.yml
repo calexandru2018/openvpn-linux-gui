@@ -1,0 +1,27 @@
+language: python
+python:
+  - 3.5
+  - 3.6
+  - 3.7.5
+
+install:
+  - pip install pipenv
+  - pipenv install --dev
+script:
+  - pyinstaller main.py --onefile --console
+
+deploy:
+  #provider: dev,
+  provider: releases,
+  local_dir: ./dist,
+  github-token: $GITHUB_TOKEN,
+  keep_history: true,
+  skip-cleanup: true,
+  target_branch: new_branch
+  overwrite: true
+  on:
+    branches: 
+      only:
+        - master
+        - new_branch
+        - travis
