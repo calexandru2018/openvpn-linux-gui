@@ -90,7 +90,7 @@ class AppEntry():
 	!!!!                                                !!!!   
 	!!!!	       Made by Alexandru Cheltuitor         !!!!
 	!!!!                                                !!!!
-	!!!!	        ProtonVPN Unofficial CLI            !!!!
+	!!!!	        openvpn-linux-cli                   !!!!
 	!!!!                   Alpha v.1                    !!!!
 	!!!!                                                !!!! 
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

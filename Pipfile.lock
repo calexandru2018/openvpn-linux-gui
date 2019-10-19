@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ceb6a83da966f221018dbe759f8b79d6182583d14735446e38f69975e452a351"
+            "sha256": "d54dcce753112b29031ba0512be7ffaf592207f001c1f8967adbe3e32c39e9b0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,13 @@
         ]
     },
     "default": {
+        "altgraph": {
+            "hashes": [
+                "sha256:d6814989f242b2b43025cba7161fc1b8fb487a62cd49c49245d6fd01c18ac997",
+                "sha256:ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c"
+            ],
+            "version": "==0.16.1"
+        },
         "certifi": {
             "hashes": [
                 "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
@@ -64,6 +71,13 @@
             ],
             "index": "pypi",
             "version": "==0.10.9"
+        },
+        "pyinstaller": {
+            "hashes": [
+                "sha256:ee7504022d1332a3324250faf2135ea56ac71fdb6309cff8cd235de26b1d0a96"
+            ],
+            "index": "pypi",
+            "version": "==3.5"
         },
         "requests": {
             "hashes": [
