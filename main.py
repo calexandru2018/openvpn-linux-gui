@@ -5,21 +5,20 @@ from include.connection_manager import ConnectionManager
 # app main class
 class AppEntry():
 	def __init__(self):
-		self.showMenu()
+		#self.showMenu()
 		# user home folder
 		self.rootDir = os.getcwd()
-		self.user_man_folder_name = "user_conf"
-		self.server_man_folder_name = "cache"
 		# this in case run from home location
 		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
 		# this in case run from inside folder
 		self.rootDir = self.rootDir
-		self.connMan = ConnectionManager(self.rootDir, self.user_man_folder_name, self.server_man_folder_name)
+		self.connMan = ConnectionManager(self.rootDir)
 		#print(self.rootDir)
 		self.switch()
 
 	def switch(self):
 		while True:
+			self.showMenu()
 			self.choice = int(input("[MAIN MENU] What would you like to do: "))
 			if(self.choice == 1):
 				self.connMan.check_requirments()
