@@ -5,7 +5,7 @@ from include.connection_manager import ConnectionManager
 # app main class
 class AppEntry():
 	def __init__(self):
-		#self.showMenu()
+		self.showMenu()
 		# user home folder
 		self.rootDir = os.getcwd()
 		# this in case run from home location
@@ -13,12 +13,10 @@ class AppEntry():
 		# this in case run from inside folder
 		self.rootDir = self.rootDir
 		self.connMan = ConnectionManager(self.rootDir)
-		#print(self.rootDir)
 		self.switch()
 
 	def switch(self):
 		while True:
-			self.showMenu()
 			self.choice = int(input("[MAIN MENU] What would you like to do: "))
 			if(self.choice == 1):
 				self.connMan.check_requirments()
@@ -48,7 +46,6 @@ class AppEntry():
 			elif(self.choice == 9):
 				#self.connMan.enable_vpn_on_boot()
 				self.connMan.openvpn_service_manager("disable")
-				print("Disable start on boot")
 				continue
 			elif(self.choice == 10):
 				self.connMan.modify_dns()
@@ -100,7 +97,7 @@ class AppEntry():
 	[4] - Cache Servers\t\t [11] - Restore original DNS
 	[5] - Generate OPVN file\t [12] - Restart "start on boot" service
 	[6] - OpenVPN Connect\t\t [13] - Restart NetworkManager
-	[7] - OpenVPN Disconnect\t [14] - Manage IPV6[Work in progress]
+	[7] - OpenVPN Disconnect\t [14] - Manage IPV6
 		
 			
 	[0] - Exit""")
