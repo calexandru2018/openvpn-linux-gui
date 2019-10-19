@@ -1,40 +1,37 @@
 import os, shutil
 
 class FolderManager():
-	def __init__(self, dirPath):
-		self.dirPath = dirPath
-
-	def returnFolderExist(self, folderName):
-		if(os.path.isdir(f"{self.dirPath}/{folderName}")):
+	def returnFolderExist(self, path):
+		if(os.path.isdir(path)):
 			return True
 		else:
 			return False
 
-	def createFolder(self, folderName):
+	def createFolder(self, path):
 		#print("Folder created in : ", self.dirPath + "/" + folderName)
-		if not self.returnFolderExist(folderName): 
+		if not self.returnFolderExist(path): 
 			try:
-				os.mkdir(self.dirPath + "/" + folderName)
+				os.mkdir(path)
 				return True
 			except:
 				return False
 		else:
 			return False
 
-	def deleteFolder(self, folderName):
-		if self.returnFolderExist(folderName): 
+	def deleteFolder(self, path):
+		if self.returnFolderExist(path): 
 			try:
-				os.rmdir(self.dirPath + "/" + folderName)
+				os.rmdir(path)
 				return True
 			except:
 				return False
 		else:
 			return False
 
-	def delete_folder_recursive(self, folderName):
-		if self.returnFolderExist(folderName): 
+	def delete_folder_recursive(self, path):
+		if self.returnFolderExist(path): 
 			try:
-				shutil.rmtree(self.dirPath + "/" + folderName)
+				shutil.rmtree(path)
 				return True
 			except:
 				return False
