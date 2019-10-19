@@ -21,7 +21,7 @@ Setup:
 ======
 **Make sure that you have python >= v3.5  installed on your system.**
 
-`git clone https://github.com/calexandru2018/protonvpn-linux-gui.git`
+`git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
 
 `cd protonvpn-linux-gui`
 
