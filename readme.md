@@ -1,15 +1,25 @@
-# protonvpn-linux-gui [alpha v.1]
-A GUI that improves the UX of ProtonVPN (should ready by alpha v2), developed by me.
+# openvpn-linux-gui [alpha v0.1]
+A GUI that improves the UX of OPENVPN (should ready by alpha v0.2) for such services as ProtonVPN.
 
 Actual Situation:
 ======
-Until the software reaches a solid CLI conversion based on ProtonVPN own CLI, the only way to interact with it will be through this version of CLI.
-
 **NOTE:** This is a work in progress, occasional bugs or issues may occur. Since the work is not packaged, you'll have to download it from github and (preferably) clone it into your /home/[user]/ folder. 
 
+Requirments:
+======
+* **Python >= v3.5**
+
+* **openvpn**
+
+* **[update-resolv-conf](https://github.com/alfredopalhares/openvpn-update-resolv-conf)**
+
+* **requests**
+
+* **netifaces**
+  
 Setup:
 ======
-**Make sure that you have python 3.5 =< installed on your system.**
+**Make sure that you have python >= v3.5  installed on your system.**
 
 `git clone https://github.com/calexandru2018/protonvpn-linux-gui.git`
 
