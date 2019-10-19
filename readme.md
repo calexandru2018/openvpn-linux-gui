@@ -23,7 +23,7 @@ Setup:
 
 `git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
 
-`cd protonvpn-linux-gui`
+`cd openvpn-linux-gui`
 
 `pipenv shell --three`
 
