@@ -25,7 +25,11 @@ Setup:
 
 `cd protonvpn-linux-gui`
 
-either `python3 main.py` or `python main.py` depending on your version.
+`pipenv shell --three`
+
+`pipenv install`
+
+and lastly `python main.py`
 
 Available Commands Explanation:
 ======
