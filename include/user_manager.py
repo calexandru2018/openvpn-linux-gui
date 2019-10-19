@@ -1,7 +1,8 @@
 import json, getpass
 
-from include.folder_manager import FolderManager
-from include.file_manager import FileManager
+from .folder_manager import FolderManager
+from .file_manager import FileManager
+from .constants import (USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE)
 
 class UserManager():
 	'''Creates, edits and deletes user data.
@@ -21,23 +22,19 @@ class UserManager():
 	read_user_data():
 		Reads user generated files by create_server_conf() and create_user_credentials()
 	'''
-	def __init__(self, rootDir, user_man_folder_name):
+	def __init__(self, rootDir):
 		self.user_server_conf = {'tier': 0, 'protocol': 'udp'}
 		self.user_credentials = {'username': '', 'password': ''}
 		self.rootDir = rootDir
-		self.folder_name = user_man_folder_name
-		self.file_server_config_name = 'user_pref'
-		self.file_server_config_type = 'json'
-		self.file_user_credentials_type = 'user_credentials' # It is actually .user_credentials but I already take care of the dot inside the FileManager() class
-		self.folder_manager = FolderManager(self.rootDir)
-		self.file_manager = FileManager(self.rootDir)
+		self.folder_manager = FolderManager()
+		self.file_manager = FileManager()
 
 	# Create server configuration (tier, protocol)
 	def create_server_conf(self):
-		if not self.file_manager.returnFileExist(self.folder_name, self.file_server_config_name, self.file_server_config_type):
+		if not self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ):
 			self.ask_for_server_config()
-			if self.folder_manager.returnFolderExist(self.folder_name) or self.folder_manager.createFolder(self.folder_name):
-				if self.file_manager.createFile(self.folder_name, self.file_server_config_name, self.file_server_config_type, json.dumps(self.user_server_conf, indent=2)):
+			if self.folder_manager.returnFolderExist(self.rootDir+"/"+USER_FOLDER) or self.folder_manager.createFolder(self.rootDir+"/"+USER_FOLDER):
+				if self.file_manager.createFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE , json.dumps(self.user_server_conf, indent=2)):
 					return True
 				print("Unable to create file")
 				return False
@@ -48,8 +45,8 @@ class UserManager():
 
 	# Edit server configuration .json file
 	def edit_server_conf(self):
-		if self.file_manager.returnFileExist(self.folder_name, self.file_server_config_name, self.file_server_config_type):
-			out = json.loads(self.file_manager.readFile(self.folder_name, self.file_server_config_name, self.file_server_config_type))
+		if self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ):
+			out = json.loads(self.file_manager.readFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ))
 			print("Your config file has stored: ", out)
 			while True:
 				userInput = input("Would you like to edit your data ? [y/n]: ")
@@ -59,37 +56,37 @@ class UserManager():
 				
 				self.ask_for_server_config()
 				
-				if self.file_manager.deleteFile(self.folder_name, self.file_server_config_name, self.file_server_config_type):
-					if self.file_manager.createFile(self.folder_name, self.file_server_config_name, self.file_server_config_type,  json.dumps(self.user_server_conf, indent=2)):
+				if self.file_manager.deleteFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ):
+					if self.file_manager.createFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ,  json.dumps(self.user_server_conf, indent=2)):
 						return True
-				print(f"Unable to edit, unable to find folder {self.folder_name} and/or file {self.file_server_config_name}")
+				print(f"Unable to edit, unable to find folder {USER_FOLDER} and/or file {USER_PREF_FILE }")
 				continue
 		else:
 			print("There are no config files to edit.")
 
 	# Create hidden file with users credentials
 	def create_user_credentials(self):
-		if not self.file_manager.returnFileExist(self.folder_name, "", self.file_user_credentials_type):
+		if not self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE):
 			self.ask_for_user_credentials()
 			user_cred = self.user_credentials['username']  + "\n" + self.user_credentials['password'] 
-			if self.folder_manager.createFolder(self.folder_name):
-				if self.file_manager.createFile(self.folder_name, "", self.file_user_credentials_type, user_cred):
+			if self.folder_manager.createFolder(self.rootDir+"/"+USER_FOLDER):
+				if self.file_manager.createFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE, user_cred):
 					return True
 				print("Unable to create file.")
 				return False
-			print(f"Unable to create folder. Check if folder {self.folder_name} is present.")
+			print(f"Unable to create folder. Check if folder {USER_FOLDER} is present.")
 			return False
 		print("There is already an existing user, edit it instead.")
 		return False
 
 	def edit_user_credentials(self):
-		if self.file_manager.returnFileExist(self.folder_name, "", self.file_user_credentials_type):
+		if self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE):
 			self.ask_for_user_credentials()
 			user_cred = self.user_credentials['username']  + "\n" + self.user_credentials['password'] 
-			if self.file_manager.deleteFile(self.folder_name, "", self.file_user_credentials_type):
-				if self.file_manager.createFile(self.folder_name, "", self.file_user_credentials_type, user_cred):
+			if self.file_manager.deleteFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE):
+				if self.file_manager.createFile(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE, user_cred):
 					return True
-				print(f"Unable to edit, unable to find folder {self.folder_name} and/or file {self.file_server_config_name}")
+				print(f"Unable to edit, unable to find folder {USER_FOLDER} and/or file {USER_CRED_FILE}")
 				return False
 			print("unable to Delete file")
 			return False
@@ -104,14 +101,13 @@ class UserManager():
 		`is_user_credentials`:
 			If True then return ovpn credentials, otherwise return server confs.
 		'''
-		file_name = self.file_server_config_name
-		appropriate_file_extension = self.file_server_config_type
+		#file_name = USER_PREF_FILE _name'
+		file_name = USER_PREF_FILE 
 		if is_user_credentials:
-			appropriate_file_extension = self.file_user_credentials_type
-			file_name = ""
+			file_name = USER_CRED_FILE
 
-		if self.file_manager.returnFileExist(self.folder_name, file_name, appropriate_file_extension):
-			return self.file_manager.readFile(self.folder_name, file_name, appropriate_file_extension)
+		if self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+file_name):
+			return self.file_manager.readFile(self.rootDir+"/"+USER_FOLDER+"/"+file_name)
 		return False
 
 	# Check if user exists (both files should be True to return True)
@@ -123,8 +119,8 @@ class UserManager():
 		Bool:
 			Return True if both file exists, False otherwise.
 		'''
-		if self.file_manager.returnFileExist(self.folder_name, self.file_server_config_name, self.file_server_config_type):
-			if self.file_manager.returnFileExist(self.folder_name, "", self.file_user_credentials_type):
+		if self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ):
+			if self.file_manager.returnFileExist(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE):
 				return True
 			print("Missing user credentials")
 		#print("Missing user server configuration file (.json)")
