@@ -1,10 +1,8 @@
 import os
 
 class FileManager():
-	def __init__(self, rootDir):
-		self.rootDir = rootDir
 
-	def returnFileExist(self, folderName, fileName, fileType):
+	def returnFileExist(self, path):
 		'''Checks if file exists in specified folder.
 		
 		Parameters:
@@ -20,13 +18,12 @@ class FileManager():
 		bool:
 			Returns True if file exists, False otherwise.
 		'''
-		pathToFile = self.rootDir+"/"+folderName+"/"+fileName+"."+fileType
-		if(os.path.isfile(pathToFile)):
+		if(os.path.isfile(path)):
 			return True
 		else:
 			return False
 
-	def createFile(self, folderName, fileName, fileType, contentToWrite):
+	def createFile(self, path, content):
 		'''Creates the file and writes content to it.
 		
 		Parameters:
@@ -37,7 +34,7 @@ class FileManager():
 			The name of the file.
 		`fileType` : string
 			The type/extension - json or txt.
-		`contentToWrite`:
+		`content`:
 			The content to write to file.
 		
 		Returns:
@@ -46,12 +43,11 @@ class FileManager():
 			Returns True if file is created, False otherwise.
 		'''
 
-		if not self.returnFileExist(folderName, fileName, fileType): 
-			path = self.rootDir + "/" + folderName
+		if not self.returnFileExist(path): 
 			#print(path)
 			try:
-				newFile = open(path +  "/" + fileName + "." + fileType, "w+")
-				newFile.write(contentToWrite)
+				newFile = open(path, "w+")
+				newFile.write(content)
 			except:
 				return False
 			else:
@@ -60,7 +56,7 @@ class FileManager():
 		else:
 			return False
 
-	def editFile(self, folderName, fileName, fileType, contentToWrite):
+	def editFile(self, path, content):
 		'''Edits the specified file, first checking if it exists.
 		
 		Parameters:
@@ -71,7 +67,7 @@ class FileManager():
 			The name of the file.
 		`fileType` : string
 			The type/extension - json or txt.
-		`contentToWrite`:
+		`content`:
 			The content to write to file.
 		
 		Returns:
@@ -79,10 +75,10 @@ class FileManager():
 		bool:
 			Returns True if file is created, False otherwise.
 		'''
-		if self.returnFileExist(folderName, fileName, fileType): 
+		if self.returnFileExist(path): 
 			try:
-				existingFile = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "a+")
-				existingFile.write(contentToWrite)
+				existingFile = open(path, "a+")
+				existingFile.write(content)
 			except:
 				return False
 			else:
@@ -91,7 +87,7 @@ class FileManager():
 		else:
 			return False
 
-	def readFile(self, folderName, fileName, fileType):
+	def readFile(self, path):
 		'''Reads the specified file.
 		
 		Parameters:
@@ -108,9 +104,9 @@ class FileManager():
 		bool(uknown ?):
 			Returns the content if file exists and can be read from, False otherwise.
 		'''
-		if self.returnFileExist(folderName, fileName, fileType): 
+		if self.returnFileExist(path): 
 			try:
-				file = open(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType, "r")
+				file = open(path, "r")
 				return file.read()
 			except:
 				return False
@@ -119,7 +115,7 @@ class FileManager():
 		else:
 			return False
 
-	def deleteFile(self, folderName, fileName, fileType):
+	def deleteFile(self, path):
 		'''Deletes the specified file.
 		
 		Parameters:
@@ -136,9 +132,9 @@ class FileManager():
 		bool:
 			Returns True if file exists and can be deleted, False otherwise.
 		'''
-		if self.returnFileExist(folderName, fileName, fileType):  
+		if self.returnFileExist(path):  
 			try:
-				os.remove(self.rootDir + "/" + folderName +  "/" + fileName + "." + fileType)
+				os.remove(path)
 			except:
 				return False
 			else:
