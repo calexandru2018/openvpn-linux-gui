@@ -1,8 +1,7 @@
 import requests, json, os
 
-from .file_manager import FileManager
-from .folder_manager import FolderManager
-from .constants import (CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
+from .static.constants import (CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
+from .static.utils import(createFile, editFile, walk_to_file, createFolder, delete_folder_recursive, returnFolderExist)
 
 class ServerManager():
 	def __init__(self, rootDir):
@@ -10,8 +9,6 @@ class ServerManager():
 		self.serverList = {}
 		self.country_full_name = ''
 		self.country_iso_name = ''
-		self.fileManager = FileManager()
-		self.folderManager = FolderManager()
 		self.countryList =  {
 			'AT': 'Austria',
 			'AU': 'Australia',
@@ -83,28 +80,20 @@ class ServerManager():
 
 	#methods saves one country per json file
 	def saveCountryList(self):
-		if not self.folderManager.returnFolderExist(self.rootDir+"/"+CACHE_FOLDER):
-			self.folderManager.createFolder(self.rootDir+"/"+CACHE_FOLDER)
+		if not returnFolderExist(self.rootDir+"/"+CACHE_FOLDER):
+			createFolder(self.rootDir+"/"+CACHE_FOLDER)
 		else:
-			if self.folderManager.delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER):
-				self.folderManager.createFolder(self.rootDir+"/"+CACHE_FOLDER)
+			if delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER):
+				createFolder(self.rootDir+"/"+CACHE_FOLDER)
 			else:
-				print("Unable to delete folder ", self.folderManager.delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER))
+				print("Unable to delete folder ", self.rootDir+"/"+CACHE_FOLDER)
 				return False
 
 		for country, content in self.serverList.items():
-			if not self.fileManager.returnFileExist(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE):
-				self.fileManager.createFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
+			if not walk_to_file(self.rootDir+"/"+CACHE_FOLDER+"/", country+SERVER_FILE_TYPE):
+				createFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
 			else:
-				self.fileManager.editFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
+				editFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
 		print("Servers cached successfully!")
-
-	def filter_servers_country(self, returnCountry):
-		path = self.rootDir + "/" + CACHE_FOLDER
-		for root, dirs, files in os.walk(path):
-			if returnCountry in files:
-				return True
-			return False
-
 
 			
