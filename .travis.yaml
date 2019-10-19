@@ -1,0 +1,19 @@
+language: python
+python:
+  - 3.5
+  - 3.6
+  - 3.7.5
+
+install:
+  - pip install pipenv
+  - pipenv install --dev
+script:
+  - pyinstaller main.py --onefile --console
+
+deploy:
+  provider: dev
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  on:
+    branch: master
+
