@@ -14,7 +14,10 @@ deploy:
   provider: dev
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
+<<<<<<< HEAD
   local_dir: build
+=======
+>>>>>>> 8335a5224889dd8c14f0d896d09bbbdced17f515
   on:
     branch: master
 
