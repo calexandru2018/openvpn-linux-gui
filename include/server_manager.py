@@ -1,17 +1,17 @@
 import requests, json, os
 
-from include.file_manager import FileManager
-from include.folder_manager import FolderManager
+from .file_manager import FileManager
+from .folder_manager import FolderManager
+from .constants import (CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
 
 class ServerManager():
-	def __init__(self, rootDir, server_man_folder_name):
+	def __init__(self, rootDir):
 		self.rootDir = rootDir
 		self.serverList = {}
-		self.serverNameLong = ''
-		self.serverNameShort = ''
-		self.fileManager = FileManager(self.rootDir)
-		self.folderManager = FolderManager(self.rootDir)
-		self.folderName = server_man_folder_name
+		self.country_full_name = ''
+		self.country_iso_name = ''
+		self.fileManager = FileManager()
+		self.folderManager = FolderManager()
 		self.countryList =  {
 			'AT': 'Austria',
 			'AU': 'Australia',
@@ -58,18 +58,18 @@ class ServerManager():
 		#self.collectServerList()
 	
 	def collectServerList(self):
-		serverReq = requests.get("https://api.protonmail.ch/vpn/logicals", headers={"x-pm-appversion": "Other", "x-pm-apiversion": "3", "Accept": "application/vnd.protonmail.v1+json"}).json()
+		serverReq = requests.get(PROTON_SERVERS_URL, headers=(PROTON_HEADERS)).json()
 		for server in serverReq['LogicalServers']:
 			if server['EntryCountry'] in self.countryList:
-				self.serverNameLong = self.countryList[server['EntryCountry']]
-				self.serverNameShort = server['EntryCountry']
+				self.country_full_name = self.countryList[server['EntryCountry']]
+				self.country_iso_name = server['EntryCountry']
 			else:
-				self.serverNameLong = self.serverNameShort = server['Name']
+				self.country_full_name = self.country_iso_name = server['Name']
 
-			if not self.serverNameShort in self.serverList:
-				self.serverList[self.serverNameShort] = {'serverList': {}}
+			if not self.country_iso_name in self.serverList:
+				self.serverList[self.country_iso_name] = {'serverList': {}}
 
-			self.serverList[self.serverNameShort]['serverList'][server['Name']] = {
+			self.serverList[self.country_iso_name]['serverList'][server['Name']] = {
 				'id': server['ID'], 
 				'load': server['Load'], 
 				'score': server['Score'], 
@@ -83,24 +83,24 @@ class ServerManager():
 
 	#methods saves one country per json file
 	def saveCountryList(self):
-		if not self.folderManager.returnFolderExist(self.folderName):
-			self.folderManager.createFolder(self.folderName)
+		if not self.folderManager.returnFolderExist(self.rootDir+"/"+CACHE_FOLDER):
+			self.folderManager.createFolder(self.rootDir+"/"+CACHE_FOLDER)
 		else:
-			if self.folderManager.delete_folder_recursive(self.folderName):
-				self.folderManager.createFolder(self.folderName)
+			if self.folderManager.delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER):
+				self.folderManager.createFolder(self.rootDir+"/"+CACHE_FOLDER)
 			else:
-				print("Unable to delete folder ", self.folderManager.delete_folder_recursive(self.folderName))
+				print("Unable to delete folder ", self.folderManager.delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER))
 				return False
 
-		for k, v in self.serverList.items():
-			if not self.fileManager.returnFileExist(self.folderName, k, 'json'):
-				self.fileManager.createFile(self.folderName, k, 'json', json.dumps(v, indent=2))
+		for country, content in self.serverList.items():
+			if not self.fileManager.returnFileExist(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE):
+				self.fileManager.createFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
 			else:
-				self.fileManager.editFile(self.folderName, k, 'json', json.dumps(v, indent=2))
+				self.fileManager.editFile(self.rootDir+"/"+CACHE_FOLDER+"/"+country+SERVER_FILE_TYPE, json.dumps(content, indent=2))
 		print("Servers cached successfully!")
 
 	def filter_servers_country(self, returnCountry):
-		path = self.rootDir + "/" + self.folderName + "/" 
+		path = self.rootDir + "/" + CACHE_FOLDER
 		for root, dirs, files in os.walk(path):
 			if returnCountry in files:
 				return True
