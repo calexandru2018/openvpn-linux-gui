@@ -8,8 +8,8 @@ class AppEntry():
 		self.showMenu()
 		# user home folder
 		self.rootDir = os.getcwd()
-		self.user_man_folder_name = "protonvpn_conf"
-		self.server_man_folder_name = "servers_in_cache"
+		self.user_man_folder_name = "user_conf"
+		self.server_man_folder_name = "cache"
 		# this in case run from home location
 		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
 		# this in case run from inside folder
@@ -67,7 +67,13 @@ class AppEntry():
 				continue
 			elif(self.choice == 14):
 				#self.connMan.restart_on_boot_service()
-				self.connMan.manage_ipv6(disable_ipv6=False)
+				choice = input("Disable IPV6 ? :")
+				_choice_ = False
+				if choice[0].lower() == "y":
+					_choice_ = True
+				elif choice[0].lower() == "n":
+					_choice_ == False 
+				self.connMan.manage_ipv6(disable_ipv6=_choice_)
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
