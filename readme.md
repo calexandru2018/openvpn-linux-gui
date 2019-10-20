@@ -50,7 +50,7 @@ Command | Explanation
 **[11] Restore original DNS** | Restores back the original DNS.
 **[12] Restart "start on boot" service** | Restarts the **[8]** service. This may be handy when waking the computer from sleep/opening laptop lid.
 **[13] Restart NetworkManager** | If **[12]** does not work, this might help. **NOTE: this will restore all your DNS settings and even possibly close your OpenVPN connection.**
-**[14] Manage IPV6[Work in progress]** | Mostly a test function to see if the script can enble/disable IPV6 and save its configurations.
+**[14] Manage IPV6** | Mostly a test function to see if the script can enble/disable IPV6 and save its configurations.
 
 
 
