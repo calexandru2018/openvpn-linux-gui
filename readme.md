@@ -19,17 +19,31 @@ Requirments:
   
 Setup:
 ======
+**`You can either git clone it and install manually, or download the from releases and run it.`**
+
 **Make sure that you have python >= v3.5  installed on your system.**
 
-`git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
+**If running single file:**
 
-`cd openvpn-linux-gui`
+1. Open terminal in home folder (Make sure you clone it into your home folder, otherwise it won´t work at the moment)
 
-`pipenv shell --three`
+2. `git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
 
-`pipenv install`
+3. `cd openvpn-linux-gui`
 
-and lastly `python main.py`
+4. `./main`
+
+**If installing manually:**
+
+1. `git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
+
+2. `cd openvpn-linux-gui`
+
+3. `pipenv shell --three`
+
+4. `pipenv install`
+
+5. `python main.py`
 
 Available Commands Explanation:
 ======
