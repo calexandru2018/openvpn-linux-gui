@@ -21,15 +21,13 @@ Setup:
 ======
 **Make sure that you have python >= v3.5  installed on your system.**
 
-`git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
+1 - Open terminal in home folder
 
-`cd openvpn-linux-gui`
+2 - `git clone https://github.com/calexandru2018/openvpn-linux-gui.git`
 
-`pipenv shell --three`
+3 - `cd openvpn-linux-gui`
 
-`pipenv install`
-
-and lastly `python main.py`
+4 - `./main`
 
 Available Commands Explanation:
 ======
