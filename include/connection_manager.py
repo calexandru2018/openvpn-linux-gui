@@ -297,6 +297,9 @@ class ConnectionManager():
 		elif action == "disable":
 			success_msg = "\"Launch on boot\" service is disabled."
 			fail_msg = "Cant disable service \"launch on boot\"."
+		elif action == "restart":
+			success_msg = "\"Launch on boot\" service was restarted."
+			fail_msg = "Cant restart service \"launch on boot\"."
 
 		#print("systemctl", action, ON_BOOT_PROCESS_NAME)
 		if action == "enable" and not servers_are_cached: 
