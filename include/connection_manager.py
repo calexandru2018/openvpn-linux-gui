@@ -1,4 +1,4 @@
-import subprocess, requests, re, os, signal, json, pprint, shutil, time, netifaces
+import subprocess, requests, re, os, json, pprint, shutil, time, netifaces
 
 from include.user_manager import UserManager
 from include.server_manager import ServerManager
@@ -6,7 +6,7 @@ from include.server_manager import ServerManager
 # Helper methods and constants 
 from include.utils.methods import (
 	walk_to_file, create_file, read_file, delete_file, delete_folder_recursive,
-	cmd_command, auto_select_optimal_server, decodeToASCII
+	cmd_command, auto_select_optimal_server
 )
 from include.utils.constants import (
 	USER_FOLDER, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
@@ -20,7 +20,6 @@ class ConnectionManager():
 		self.server_manager = ServerManager(self.rootDir)
 		self.user_manager = UserManager(self.rootDir)
 		self.actual_ip = False
-		self.new_ip = False
 
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
@@ -163,22 +162,15 @@ class ConnectionManager():
 		Bool:
 			True if the IP's match, False otherwise.
 		'''
-		dyndnsRequest = False
-		protonRequest = False
-		dyndnsIp = False
+		dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
+		dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
 
-		try:
-			dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
-			protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
-			dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
-		finally:
-			try:
-				if	dyndnsIp == protonRequest['IP']:
-					return protonRequest['IP']
-				else:
-					return False
-			except:
-				return False
+		protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
+
+		if dyndnsIp == protonRequest['IP']:
+			#print("Internet is OK and your IP is:", dyndnsIp)
+			return protonRequest['IP']
+		return False
 
 	# check if there is internet connection: is_internet_working_normally()
 	def is_internet_working_normally(self):
@@ -240,19 +232,26 @@ class ConnectionManager():
 	def openvpn_connect(self):
 		config_path = self.rootDir + "/" + USER_FOLDER + "/" + OVPN_FILE
 		credentials_path = self.rootDir + "/" + USER_FOLDER + "/" + USER_CRED_FILE
+		is_connected = False
 		
 		print("Connecting to vpn server...")
-		if self.get_ip():
+		try:
+			is_connected = self.get_ip()
+		except:
+			is_connected = False
+
+		if is_connected:
 			if self.modify_dns() and self.manage_ipv6(disable_ipv6=True):
-				var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				var = subprocess.Popen(["sudo","openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				var.wait()
-				self.ip_swap("connect")
+				self.ip_swap("connect", is_connected)
 		else:
 			print("There is no internet connection.")
 
 	# disconnect from open_vpn: openvpn_disconnect()
 	def openvpn_disconnect(self):
 		getPID = False
+		is_connected = False
 		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
 		try:
 			for command in command_list:
@@ -265,30 +264,33 @@ class ConnectionManager():
 		
 		print("Disconnecting from vpn server...")
 		if getPID:
-			self.new_ip = self.get_ip()
+			try:
+				is_connected = self.get_ip()
+			except:
+				is_connected = False
 			if self.modify_dns(restore_original_dns=True):
 				self.manage_ipv6(disable_ipv6=False)
-				var = subprocess.Popen(["sudo", "kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				var = subprocess.Popen(["sudo","kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
 				var.wait()
-				self.ip_swap("disconnect")
+				self.ip_swap("disconnect", is_connected)
 		else:
 			print("Unable to disconnect, no OpenVPN process was found.")
 			return False
 
 	# Optimize when disconnecting, check for openvpn pid
-	def ip_swap(self, action):
+	def ip_swap(self, action, actual_IP):
 		success_msg = "Connected to vpn server."
 		fail_msg = "Unable to connect to vpn server."
+
 		if action == "disconnect":
 			success_msg = "Disconnected from vpn server."
 			fail_msg = "Unable to disconnected from vpn server."
-
-		time.sleep(4)
-
-		if self.is_internet_working_normally() and (self.actual_ip != self.get_ip()):
-			self.actual_ip = self.new_ip
-			self.new_ip = False
+		
+		print("value of actual IP", self.actual_ip)
+		if actual_IP and actual_IP != self.actual_ip:
+			self.actual_ip = actual_IP
+			print("New value of actual IP", self.actual_ip)
 			print(success_msg)
 			delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER)
 		else:
@@ -357,7 +359,7 @@ class ConnectionManager():
 				subprocess.run(["sudo", "bash", "-c", append_to_file])
 				print("Created new file in /openvpn/client/")
 			except:
-				print("Unable to create configuration file in /oepnvpn/client")
+				print("Unable to create configuration file in /openvpn/client/")
 
 			if(not walk_to_file("/opt/", USER_CRED_FILE, in_dirs=True)):
 				self.copy_credentials()
@@ -383,6 +385,7 @@ class ConnectionManager():
 				return False
 
 	# install update_resolv_conf: install_update_resolv_conf()
+
 
 	# manage IPV6: manage_ipv6()
 	def manage_ipv6(self, disable_ipv6):
