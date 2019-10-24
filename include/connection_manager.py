@@ -1,14 +1,14 @@
 import subprocess, requests, re, os, signal, json, pprint, shutil, time, netifaces
 
-from .user_manager import UserManager
-from .server_manager import ServerManager
+from include.user_manager import UserManager
+from include.server_manager import ServerManager
 
 # Helper methods and constants 
-from .static.utils import (
-	returnFileExist, createFile, readFile, deleteFile, delete_folder_recursive, walk_to_file,
+from include.utils.methods import (
+	walk_to_file, create_file, read_file, delete_file, delete_folder_recursive,
 	cmd_command, auto_select_optimal_server, decodeToASCII
 )
-from .static.constants import (
+from include.utils.constants import (
 	USER_FOLDER, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
 	OS_PLATFORM, DYNDNS_CHECK_URL, PROTON_CHECK_URL, PROTON_HEADERS, PROJECT_NAME,
 	PROTON_DNS, ON_BOOT_PROCESS_NAME
@@ -24,7 +24,7 @@ class ConnectionManager():
 
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
-		resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
+		resolv_conf_path = walk_to_file("/etc", "resolv.conf", is_return_bool=False)
 		
 		if(resolv_conf_path):
 			print("Modifying dns...")
@@ -60,14 +60,21 @@ class ConnectionManager():
 		'''Generates OVPN files
 		
 		Tier 0(1) = Free
+
 		Tier 1(2) = Basic
+
 		Tier 2(3) = Plus
+
 		Tier 3(4) = Visionary
 		
 		Feature 1: Secure Core
+
 		Feature 2: Tor
+
 		Feature 4: P2P
+
 		Feature 8: XOR (not in use)
+
 		Feature 16: IPV6 (not in use)
 		'''
 		country = input("Which country to connect to: ")
@@ -75,7 +82,7 @@ class ConnectionManager():
 		file = country.upper() + SERVER_FILE_TYPE
 
 		try:
-			data = json.loads(readFile(path, file))
+			data = json.loads(read_file(path, file))
 		except TypeError:
 			print("Servers are not cached.") 
 			return False
@@ -92,8 +99,8 @@ class ConnectionManager():
 		serverReq = requests.get(url, headers=(PROTON_HEADERS))
 
 		if walk_to_file(self.rootDir+"/"+USER_FOLDER, OVPN_FILE):
-			deleteFile(self.rootDir+"/"+USER_FOLDER+"/", OVPN_FILE)
-		if createFile(self.rootDir+"/"+USER_FOLDER+"/"+OVPN_FILE, serverReq.text):
+			delete_file(self.rootDir+"/"+USER_FOLDER+"/", OVPN_FILE)
+		if create_file(self.rootDir+"/"+USER_FOLDER+"/"+OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
 			return True
 		
@@ -156,15 +163,22 @@ class ConnectionManager():
 		Bool:
 			True if the IP's match, False otherwise.
 		'''
-		dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
-		dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
+		dyndnsRequest = False
+		protonRequest = False
+		dyndnsIp = False
 
-		protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
-
-		if dyndnsIp == protonRequest['IP']:
-			#print("Internet is OK and your IP is:", dyndnsIp)
-			return protonRequest['IP']
-		return False
+		try:
+			dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
+			protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
+			dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
+		finally:
+			try:
+				if	dyndnsIp == protonRequest['IP']:
+					return protonRequest['IP']
+				else:
+					return False
+			except:
+				return False
 
 	# check if there is internet connection: is_internet_working_normally()
 	def is_internet_working_normally(self):
@@ -322,10 +336,11 @@ class ConnectionManager():
 
 	def generate_ovpn_for_boot(self):
 		country = input("Which country to connect to: ")
-		path = self.rootDir+"/"+CACHE_FOLDER+"/"+country.upper() + SERVER_FILE_TYPE
+		path = self.rootDir+"/"+CACHE_FOLDER
+		file = country.upper() + SERVER_FILE_TYPE
 
-		if returnFileExist(path):
-			with open(path) as file:
+		if walk_to_file(path, file):
+			with open(path+"/"+file) as file:
 				data = json.load(file)
 
 			connectInfo = auto_select_optimal_server(data)
@@ -401,8 +416,8 @@ class ConnectionManager():
 							ipv6 = ipv6.group(0)
 							break
 			if ipv6 and netmask:
-				if returnFileExist(self.rootDir + "/"+ USER_FOLDER + "/" + IPV6_BACKUP_FILE):	
-					deleteFile(self.rootDir + "/" + USER_FOLDER + "/", IPV6_BACKUP_FILE)
+				if walk_to_file(self.rootDir + "/"+ USER_FOLDER, IPV6_BACKUP_FILE):	
+					delete_file(self.rootDir + "/" + USER_FOLDER, IPV6_BACKUP_FILE)
 				with open(self.rootDir + "/" + USER_FOLDER + "/" + IPV6_BACKUP_FILE, "w") as file:
 					file.write(interface_to_save + " " + ipv6 + netmask)
 					if cmd_command(enable_default, as_sudo=True) and cmd_command(enable_all, as_sudo=True):
