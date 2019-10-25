@@ -1,7 +1,7 @@
 import os, subprocess
 
 from include.connection_manager import ConnectionManager
-from include.utils.constants import (LOCATION)
+from include.utils.constants import (PATH_TO_USER_CRED_FILE)
 
 # app main class
 class AppEntry():
@@ -78,9 +78,7 @@ class AppEntry():
 				self.connMan.manage_ipv6(disable_ipv6=_choice_)
 				continue
 			elif(self.choice == 15):
-				print(os.environ["HOME"])
-				print(os.environ["USERNAME"])
-				print(LOCATION)
+				print(PATH_TO_USER_CRED_FILE.split("/")[-1])
 				break
 			elif(self.choice == 0):
 				print("Exit program\n")
