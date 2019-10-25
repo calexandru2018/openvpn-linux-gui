@@ -21,10 +21,9 @@ class UserManager():
 	read_user_data():
 		Reads user generated files by create_server_conf() and create_user_credentials()
 	'''
-	def __init__(self, rootDir):
+	def __init__(self):
 		self.user_server_conf = {'tier': 0, 'protocol': 'udp'}
 		self.user_credentials = {'username': '', 'password': ''}
-		self.rootDir = rootDir
 
 	# Create server configuration (tier, protocol)
 	def create_server_conf(self):

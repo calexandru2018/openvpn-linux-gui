@@ -18,7 +18,7 @@ class ConnectionManager():
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 		self.rootDir = rootDir
 		self.server_manager = ServerManager(self.rootDir)
-		self.user_manager = UserManager(self.rootDir)
+		self.user_manager = UserManager()
 		self.actual_ip = False
 
 	# modify DNS: modify_dns()
