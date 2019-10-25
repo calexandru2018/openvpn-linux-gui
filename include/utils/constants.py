@@ -9,22 +9,22 @@ PROJ_PATH = os.path.join(os.path.expanduser(f"~{USER}"), f"{PROJECT_NAME}")
 PATH_TO_USER_FOLDER = os.path.join(PROJ_PATH, "user_conf")
 USER_FOLDER = "user_conf"
 
-PATH_TO_USER_CRED_FILE = os.path.join(PROJ_PATH, ".user_credentials")
+PATH_TO_USER_CRED_FILE = os.path.join(PATH_TO_USER_FOLDER, ".user_credentials")
 USER_CRED_FILE = ".user_credentials"
 
-PATH_TO_USER_PREF_FILE = os.path.join(PROJ_PATH, "user_pref.json")
+PATH_TO_USER_PREF_FILE = os.path.join(PATH_TO_USER_FOLDER, "user_pref.json")
 USER_PREF_FILE = "user_pref.json"
 
 PATH_TO_CACHE_FOLDER = os.path.join(PROJ_PATH, "cache_servers")
 CACHE_FOLDER = "cache_servers"
 
-PATH_TO_OVPN_FILE = os.path.join(PROJ_PATH, "server.ovpn")
+PATH_TO_OVPN_FILE = os.path.join(PATH_TO_USER_FOLDER, "server.ovpn")
 OVPN_FILE = "server.ovpn"
 
-PATH_TO_RESOLV_BACKUP_FILE = os.path.join(PROJ_PATH, ".resolv_conf_backup")
+PATH_TO_RESOLV_BACKUP_FILE = os.path.join(PATH_TO_USER_FOLDER, ".resolv_conf_backup")
 RESOLV_BACKUP_FILE = ".resolv_conf_backup"
 
-PATH_TO_IPV6_BACKUP_FILE = os.path.join(PROJ_PATH, ".ipv6_backup")
+PATH_TO_IPV6_BACKUP_FILE = os.path.join(PATH_TO_USER_FOLDER, ".ipv6_backup")
 IPV6_BACKUP_FILE = ".ipv6_backup"
 
 SERVER_FILE_TYPE = ".json"

@@ -90,7 +90,7 @@ def edit_file(path, content):
 	else:
 		return False
 
-def read_file(path, file):
+def read_file(path):
 	'''Reads the specified file.
 	
 	Parameters:
@@ -107,19 +107,19 @@ def read_file(path, file):
 	bool(uknown ?):
 		Returns the content if file exists and can be read from, False otherwise.
 	'''
-	if folder_exist(path): 
-		try:
-			file = open(path+file, "r")
-			return file.read()
-		except:
-			return False
-		else:
-			file.close()
-	else:
-		print("____")
+	# if folder_exist(path): 
+	try:
+		file = open(path, "r")
+		return file.read()
+	except:
 		return False
+	else:
+		file.close()
+	# else:
+	# 	print("____")
+	# 	return False
 
-def delete_file(path, file):
+def delete_file(path):
 	'''Deletes the specified file.
 	
 	Parameters:
@@ -136,15 +136,14 @@ def delete_file(path, file):
 	bool:
 		Returns True if file exists and can be deleted, False otherwise.
 	'''
-	if folder_exist(path):  
-		try:
-			os.remove(path+file)
-		except:
-			return False
-		else:
-			return True
-	else:
+	# if folder_exist(path):  
+	try:
+		os.remove(path)
+		return True
+	except:
 		return False
+	# else:
+	# 	return False
 
 import os, shutil
 
