@@ -1,6 +1,6 @@
 import requests, json, os
 
-from include.utils.constants import (CACHE_FOLDER, PATH_TO_CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
+from include.utils.constants import (CACHE_FOLDER, CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
 from include.utils.methods import(create_file, edit_file, walk_to_file, create_folder, delete_folder_recursive, folder_exist)
 
 class ServerManager():
@@ -24,6 +24,7 @@ class ServerManager():
 			'ES': 'Spain',
 			'FI': 'Finald',
 			'FR': 'France',
+			'GR': 'Greece',
 			'HK': 'Hong Kong',
 			'IE': 'Ireland',
 			'IL': 'Isreael',
@@ -79,18 +80,18 @@ class ServerManager():
 
 	#methods saves one country per json file
 	def saveCountryList(self):
-		if not folder_exist(PATH_TO_CACHE_FOLDER):
-			create_folder(PATH_TO_CACHE_FOLDER)
+		if not folder_exist(CACHE_FOLDER):
+			create_folder(CACHE_FOLDER)
 		else:
-			if delete_folder_recursive(PATH_TO_CACHE_FOLDER):
-				create_folder(PATH_TO_CACHE_FOLDER)
+			if delete_folder_recursive(CACHE_FOLDER):
+				create_folder(CACHE_FOLDER)
 			else:
-				print("Unable to delete folder ", PATH_TO_CACHE_FOLDER)
+				print("Unable to delete folder ", CACHE_FOLDER)
 				return False
 
 		for country, content in self.serverList.items():
-			country_path = os.path.join(PATH_TO_CACHE_FOLDER, country+SERVER_FILE_TYPE)
-			if not walk_to_file(PATH_TO_CACHE_FOLDER, country+SERVER_FILE_TYPE):
+			country_path = os.path.join(CACHE_FOLDER, country+SERVER_FILE_TYPE)
+			if not walk_to_file(CACHE_FOLDER, country+SERVER_FILE_TYPE):
 				create_file(country_path, json.dumps(content, indent=2))
 			else:
 				edit_file(country_path, json.dumps(content, indent=2))
