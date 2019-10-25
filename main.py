@@ -1,6 +1,7 @@
 import os, subprocess
 
 from include.connection_manager import ConnectionManager
+from include.utils.constants import (LOCATION)
 
 # app main class
 class AppEntry():
@@ -76,6 +77,11 @@ class AppEntry():
 					_choice_ == False 
 				self.connMan.manage_ipv6(disable_ipv6=_choice_)
 				continue
+			elif(self.choice == 15):
+				print(os.environ["HOME"])
+				print(os.environ["USERNAME"])
+				print(LOCATION)
+				break
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break

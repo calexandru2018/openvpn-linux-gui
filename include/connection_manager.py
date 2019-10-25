@@ -9,7 +9,7 @@ from include.utils.methods import (
 	cmd_command, auto_select_optimal_server
 )
 from include.utils.constants import (
-	USER_FOLDER, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
+	HOME, PROJ_PATH, USER_FOLDER, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
 	OS_PLATFORM, DYNDNS_CHECK_URL, PROTON_CHECK_URL, PROTON_HEADERS, PROJECT_NAME,
 	PROTON_DNS, ON_BOOT_PROCESS_NAME
 )
@@ -27,7 +27,7 @@ class ConnectionManager():
 		
 		if(resolv_conf_path):
 			print("Modifying dns...")
-			resolv_conf_backup = self.rootDir + "/" + USER_FOLDER + "/" + RESOLV_BACKUP_FILE
+			resolv_conf_backup = os.path.join(PROJ_PATH, RESOLV_BACKUP_FILE)
 			if not restore_original_dns:
 				if shutil.copy(resolv_conf_path, resolv_conf_backup):
 					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
@@ -77,7 +77,7 @@ class ConnectionManager():
 		Feature 16: IPV6 (not in use)
 		'''
 		country = input("Which country to connect to: ")
-		path = self.rootDir+"/" + CACHE_FOLDER + "/"
+		path = os.path.join(PROJ_PATH, CACHE_FOLDER)
 		file = country.upper() + SERVER_FILE_TYPE
 
 		try:
@@ -97,8 +97,10 @@ class ConnectionManager():
 
 		serverReq = requests.get(url, headers=(PROTON_HEADERS))
 
-		if walk_to_file(self.rootDir+"/"+USER_FOLDER, OVPN_FILE):
-			delete_file(self.rootDir+"/"+USER_FOLDER+"/", OVPN_FILE)
+		user_folder = os.path.join(PROJ_PATH, USER_FOLDER)
+
+		if walk_to_file(user_folder, OVPN_FILE):
+			delete_file(user_folder, OVPN_FILE)
 		if create_file(self.rootDir+"/"+USER_FOLDER+"/"+OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
 			return True
@@ -230,8 +232,8 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		config_path = self.rootDir + "/" + USER_FOLDER + "/" + OVPN_FILE
-		credentials_path = self.rootDir + "/" + USER_FOLDER + "/" + USER_CRED_FILE
+		config_path = HOME + "/" + OVPN_FILE
+		credentials_path = HOME + "/" + USER_CRED_FILE
 		is_connected = False
 		
 		print("Connecting to vpn server...")
@@ -377,7 +379,7 @@ class ConnectionManager():
 			return False
 
 	def copy_credentials(self):
-		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " + self.rootDir + "/" + USER_FOLDER + "/"+USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
+		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " + HOME + "/"+USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
 		try:
 			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
 				for cmd in cmds:
@@ -397,15 +399,15 @@ class ConnectionManager():
 	def manage_ipv6(self, disable_ipv6):
 		ipv6 = False
 		netmask = False
-		enable_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=1"]
-		enable_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"]
+		ipv6_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=1"]
+		ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"]
 
 		if not disable_ipv6:
-			with open(self.rootDir + "/" + USER_FOLDER + "/" + IPV6_BACKUP_FILE, "r") as file:
+			with open(HOME + "/" + IPV6_BACKUP_FILE, "r") as file:
 				content = file.read().split()
-			enable_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
-			enable_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=0"]
-			if cmd_command(enable_default, as_sudo=True) and cmd_command(enable_all, as_sudo=True):
+			ipv6_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
+			ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=0"]
+			if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 				cmd_command(["ip", "addr", "add", content[1] , "dev", content[0]],  as_sudo=True)
 				print("IPV6 Restored and linklocal restored.")
 				return True
@@ -426,10 +428,10 @@ class ConnectionManager():
 							break
 			if ipv6 and netmask:
 				if walk_to_file(self.rootDir + "/"+ USER_FOLDER, IPV6_BACKUP_FILE):	
-					delete_file(self.rootDir + "/" + USER_FOLDER, IPV6_BACKUP_FILE)
-				with open(self.rootDir + "/" + USER_FOLDER + "/" + IPV6_BACKUP_FILE, "w") as file:
+					delete_file(HOME, IPV6_BACKUP_FILE)
+				with open(HOME + "/" + IPV6_BACKUP_FILE, "w") as file:
 					file.write(interface_to_save + " " + ipv6 + netmask)
-					if cmd_command(enable_default, as_sudo=True) and cmd_command(enable_all, as_sudo=True):
+					if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 						print("IPV6 disabled.")
 						return True
 			else:

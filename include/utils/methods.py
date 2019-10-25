@@ -198,10 +198,10 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 		try:
 			if as_sudo:
 				args[0].insert(0, "sudo")
-				x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			else:
-				x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-			return to_ascii(x.stdout).strip()
+			return to_ascii(output.stdout).strip()
 		except:
 			return False
