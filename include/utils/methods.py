@@ -90,7 +90,7 @@ def edit_file(path, content):
 	else:
 		return False
 
-def read_file(path):
+def read_file(path, second_arg=False):
 	'''Reads the specified file.
 	
 	Parameters:
@@ -108,13 +108,22 @@ def read_file(path):
 		Returns the content if file exists and can be read from, False otherwise.
 	'''
 	# if folder_exist(path): 
-	try:
-		file = open(path, "r")
-		return file.read()
-	except:
-		return False
+	if not second_arg:
+		try:
+			file = open(path, "r")
+			return file.read()
+		except:
+			return False
+		else:
+			file.close()
 	else:
-		file.close()
+		try:
+			file = open(path+"/"+second_arg, "r")
+			return file.read()
+		except:
+			return False
+		else:
+			file.close()
 	# else:
 	# 	print("____")
 	# 	return False
