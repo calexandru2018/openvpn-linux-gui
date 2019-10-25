@@ -4,8 +4,7 @@ from include.utils.constants import (CACHE_FOLDER, PATH_TO_CACHE_FOLDER, SERVER_
 from include.utils.methods import(create_file, edit_file, walk_to_file, create_folder, delete_folder_recursive, folder_exist)
 
 class ServerManager():
-	def __init__(self, rootDir):
-		self.rootDir = rootDir
+	def __init__(self):
 		self.serverList = {}
 		self.country_full_name = ''
 		self.country_iso_name = ''
