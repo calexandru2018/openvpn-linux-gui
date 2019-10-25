@@ -27,13 +27,14 @@ class ConnectionManager():
 		if(path_resolv_conf):
 			print("Modifying dns...")
 			if not restore_original_dns:
-				print("Inside changin to new")
 				if shutil.copy(path_resolv_conf, RESOLV_BACKUP_FILE):
-					cmd_new_dns = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
+					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 					try:
-						subprocess.Popen(["sudo", "bash", "-c", cmd_new_dns], stdout=subprocess.PIPE)
-						print("DNS updated with new configurations.")
-						return True
+						if subprocess.run(["sudo", "bash", "-c", cmd]).returncode == 0:
+							print("DNS updated with new configurations.")
+							return True
+						else:
+							print("Unable to run CMD command in backup")
 					except:
 						print("Unable to update DNS configurations")
 						return False
@@ -41,15 +42,17 @@ class ConnectionManager():
 					print("Unable to back DNS configurations.")
 					return False
 			else:
-				print("Inside restoring old")
 				try:
 					with open(RESOLV_BACKUP_FILE) as f:
 						content = f.read()
-						cmd_rest = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
-						subprocess.Popen(["sudo", "bash", "-c", cmd_rest], stdout=subprocess.PIPE)
+					# cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
+					cmd = "cat > /etc/resolv.conf <<EOF \nHELLO\n EOF"
+					if subprocess.run(["sudo", "bash", "-c", cmd]).returncode == 0:
 						#delete_file(RESOLV_BACKUP_FILE)
 						print("Restored to original DNS configurations.")
 						return True
+					else:
+						print("Unable to run CMD command in restore")
 				except:
 					print("Unable to restore original DNS configurations, try restarting the Network Manager.")
 		else:
@@ -69,9 +72,8 @@ class ConnectionManager():
 		if is_connected:
 			if self.modify_dns():
 				if self.manage_ipv6(disable_ipv6=True):
-					var = subprocess.run(["sudo", "openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-					print(var)
-					# var.wait()
+					var = subprocess.Popen(["sudo", "openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					var.wait()
 					self.ip_swap("connect", is_connected)
 				else:
 					print("No IPV6 backup file found")
@@ -102,10 +104,9 @@ class ConnectionManager():
 				is_connected = False
 			if self.modify_dns(restore_original_dns=True):
 				if self.manage_ipv6(disable_ipv6=False):
-					var = subprocess.run(["sudo", "pkill", "openvpn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-					print(var)
+					var = subprocess.Popen(["sudo", "pkill", "openvpn"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					var.wait()
 					# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
-					# var.wait()
 					self.ip_swap("disconnect", is_connected)
 				else:
 					print("Could not restore IPV6")
@@ -125,7 +126,7 @@ class ConnectionManager():
 			success_msg = "Disconnected from vpn server."
 			fail_msg = "Unable to disconnected from vpn server."
 		
-		print("value of actual IP", self.actual_ip)
+		# print("value of actual IP", self.actual_ip)
 		try:
 			new_IP = self.get_ip()
 		except:
