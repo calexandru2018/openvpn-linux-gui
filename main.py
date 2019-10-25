@@ -1,24 +1,13 @@
 import os, subprocess
 
 from include.connection_manager import ConnectionManager
-from include.utils.constants import (PATH_TO_USER_CRED_FILE)
+from include.utils.constants import (USER_CRED_FILE)
 
 # app main class
 class AppEntry():
 	def __init__(self):
-		self.rootDir = os.getcwd()
-		# this in case run from home location
-		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
-		# this in case run from inside folder
-		self.rootDir = self.rootDir
 		self.showMenu()
-		# user home folder
-		self.rootDir = os.getcwd()
-		# this in case run from home location
-		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
-		# this in case run from inside folder
-		self.rootDir = self.rootDir
-		self.connMan = ConnectionManager(self.rootDir)
+		self.connMan = ConnectionManager()
 		self.switch()
 
 	def switch(self):
@@ -78,7 +67,7 @@ class AppEntry():
 				self.connMan.manage_ipv6(disable_ipv6=_choice_)
 				continue
 			elif(self.choice == 15):
-				print(PATH_TO_USER_CRED_FILE.split("/")[-1])
+				print(USER_CRED_FILE.split("/")[-1])
 				break
 			elif(self.choice == 0):
 				print("Exit program\n")
