@@ -9,14 +9,13 @@ from include.utils.methods import (
 	cmd_command, auto_select_optimal_server
 )
 from include.utils.constants import (
-	HOME, PROJ_PATH, USER_FOLDER, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, DYNDNS_CHECK_URL, PROTON_CHECK_URL, PROTON_HEADERS, PROJECT_NAME,
+	HOME, PROJ_PATH, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
+	OS_PLATFORM, DYNDNS_CHECK_URL, USER_FOLDER, OVPN_FILE, USER_CRED_FILE, CACHE_FOLDER, PROTON_CHECK_URL, PROTON_HEADERS, PROJECT_NAME,
 	PROTON_DNS, ON_BOOT_PROCESS_NAME
 )
 class ConnectionManager():
-	def __init__(self, rootDir):
+	def __init__(self):
 		#print("\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n\t! In connection manager !\n\t!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-		self.rootDir = rootDir
 		self.server_manager = ServerManager()
 		self.user_manager = UserManager()
 		self.actual_ip = False
@@ -27,9 +26,9 @@ class ConnectionManager():
 		
 		if(resolv_conf_path):
 			print("Modifying dns...")
-			resolv_conf_backup = os.path.join(PROJ_PATH, RESOLV_BACKUP_FILE)
+			#resolv_conf_backup = os.path.join(PROJ_PATH, RESOLV_BACKUP_FILE)
 			if not restore_original_dns:
-				if shutil.copy(resolv_conf_path, resolv_conf_backup):
+				if shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE):
 					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 					try:
 						subprocess.run(["sudo", "bash", "-c", cmd])
@@ -77,11 +76,9 @@ class ConnectionManager():
 		Feature 16: IPV6 (not in use)
 		'''
 		country = input("Which country to connect to: ")
-		path = os.path.join(PROJ_PATH, CACHE_FOLDER)
 		file = country.upper() + SERVER_FILE_TYPE
-
 		try:
-			data = json.loads(read_file(path, file))
+			data = json.loads(read_file(CACHE_FOLDER, file))
 		except TypeError:
 			print("Servers are not cached.") 
 			return False
@@ -97,11 +94,9 @@ class ConnectionManager():
 
 		serverReq = requests.get(url, headers=(PROTON_HEADERS))
 
-		user_folder = os.path.join(PROJ_PATH, USER_FOLDER)
-
-		if walk_to_file(user_folder, OVPN_FILE):
-			delete_file(user_folder, OVPN_FILE)
-		if create_file(self.rootDir+"/"+USER_FOLDER+"/"+OVPN_FILE, serverReq.text):
+		if walk_to_file(USER_FOLDER, OVPN_FILE.split("/")[-1]):
+			delete_file(OVPN_FILE)
+		if create_file(OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
 			return True
 		
@@ -232,8 +227,8 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		config_path = HOME + "/" + OVPN_FILE
-		credentials_path = HOME + "/" + USER_CRED_FILE
+		# config_path = HOME + "/" + OVPN_FILE
+		# credentials_path = HOME + "/" + USER_CRED_FILE
 		is_connected = False
 		
 		print("Connecting to vpn server...")
@@ -244,7 +239,8 @@ class ConnectionManager():
 
 		if is_connected:
 			if self.modify_dns() and self.manage_ipv6(disable_ipv6=True):
-				var = subprocess.Popen(["sudo","openvpn", "--daemon", "--config", config_path, "--auth-user-pass", credentials_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				var = subprocess.Popen(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				print(var)
 				var.wait()
 				self.ip_swap("connect", is_connected)
 		else:
@@ -300,7 +296,7 @@ class ConnectionManager():
 			self.actual_ip = actual_IP
 			print("New value of actual IP", self.actual_ip)
 			print(success_msg)
-			delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER)
+			delete_folder_recursive(CACHE_FOLDER)
 		else:
 			print(fail_msg)
 
@@ -331,26 +327,19 @@ class ConnectionManager():
 			return False
 		try:
 			subprocess.run(["sudo", "systemctl", action, ON_BOOT_PROCESS_NAME])
-			delete_folder_recursive(self.rootDir+"/"+CACHE_FOLDER)
+			delete_folder_recursive(CACHE_FOLDER)
 			print("\n"+success_msg+"\n")
 		except:
 			print("\n"+fail_msg+"\n")
 
-	def restart_network_manager(self):
-		print("systemctl restart", "NetworkManager")
-		try:
-			subprocess.run(["systemctl", "restart", "NetworkManager"])
-			print("\nRestarted network manager\n")
-		except:
-			print("Cant restart network manager")
 
 	def generate_ovpn_for_boot(self):
 		country = input("Which country to connect to: ")
-		path = self.rootDir+"/"+CACHE_FOLDER
+		#path = self.rootDir+"/"+CACHE_FOLDER
 		file = country.upper() + SERVER_FILE_TYPE
 
-		if walk_to_file(path, file):
-			with open(path+"/"+file) as file:
+		if walk_to_file(CACHE_FOLDER, file):
+			with open(os.path.join(CACHE_FOLDER, file)) as file:
 				data = json.load(file)
 
 			connectInfo = auto_select_optimal_server(data)
@@ -360,10 +349,10 @@ class ConnectionManager():
 			server_req = requests.get(url, headers=(PROTON_HEADERS))
 			original_req = server_req.text
 			start_index = original_req.find("auth-user-pass")
-			modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + USER_CRED_FILE + original_req[start_index+14:]
-
+			modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + OVPN_FILE.split("/")[-1] + original_req[start_index+14:]
 			try:
-				append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
+				#append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
+				append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split("/")[-1].split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
 				subprocess.run(["sudo", "bash", "-c", append_to_file])
 				print("Created new file in /openvpn/client/")
 			except:
@@ -379,7 +368,7 @@ class ConnectionManager():
 			return False
 
 	def copy_credentials(self):
-		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " + HOME + "/"+USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
+		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
 		try:
 			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
 				for cmd in cmds:
@@ -403,7 +392,7 @@ class ConnectionManager():
 		ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"]
 
 		if not disable_ipv6:
-			with open(HOME + "/" + IPV6_BACKUP_FILE, "r") as file:
+			with open(IPV6_BACKUP_FILE, "r") as file:
 				content = file.read().split()
 			ipv6_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
 			ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=0"]
@@ -427,12 +416,20 @@ class ConnectionManager():
 							ipv6 = ipv6.group(0)
 							break
 			if ipv6 and netmask:
-				if walk_to_file(self.rootDir + "/"+ USER_FOLDER, IPV6_BACKUP_FILE):	
-					delete_file(HOME, IPV6_BACKUP_FILE)
-				with open(HOME + "/" + IPV6_BACKUP_FILE, "w") as file:
+				if walk_to_file(USER_FOLDER, IPV6_BACKUP_FILE.split("/")[-1]):	
+					delete_file(IPV6_BACKUP_FILE)
+				with open(IPV6_BACKUP_FILE, "w") as file:
 					file.write(interface_to_save + " " + ipv6 + netmask)
 					if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 						print("IPV6 disabled.")
 						return True
 			else:
 				return False
+
+	def restart_network_manager(self):
+			print("systemctl restart", "NetworkManager")
+			try:
+				subprocess.run(["systemctl", "restart", "NetworkManager"])
+				print("\nRestarted network manager\n")
+			except:
+				print("Cant restart network manager")
