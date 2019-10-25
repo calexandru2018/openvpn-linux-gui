@@ -22,30 +22,32 @@ class ConnectionManager():
 
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
-		resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
+		path_resolv_conf = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
 		
-		if(resolv_conf_path):
+		if(path_resolv_conf):
 			print("Modifying dns...")
-			#resolv_conf_backup = os.path.join(PROJ_PATH, RESOLV_BACKUP_FILE)
 			if not restore_original_dns:
-				if shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE):
-					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
+				print("Inside changin to new")
+				if shutil.copy(path_resolv_conf, RESOLV_BACKUP_FILE):
+					cmd_new_dns = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 					try:
-						subprocess.run(["sudo", "bash", "-c", cmd])
+						subprocess.Popen(["sudo", "bash", "-c", cmd_new_dns], stdout=subprocess.PIPE)
 						print("DNS updated with new configurations.")
 						return True
 					except:
-						print("unable to update DNS configurations")
+						print("Unable to update DNS configurations")
 						return False
 				else:
 					print("Unable to back DNS configurations.")
 					return False
 			else:
+				print("Inside restoring old")
 				try:
-					with open(resolv_conf_backup) as f:
+					with open(RESOLV_BACKUP_FILE) as f:
 						content = f.read()
-						cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
-						subprocess.run(["sudo", "bash", "-c", cmd])
+						cmd_rest = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
+						subprocess.Popen(["sudo", "bash", "-c", cmd_rest], stdout=subprocess.PIPE)
+						#delete_file(RESOLV_BACKUP_FILE)
 						print("Restored to original DNS configurations.")
 						return True
 				except:
@@ -53,6 +55,89 @@ class ConnectionManager():
 		else:
 			print("The \"resolv.conf\" file was not found on your system.")
 			return False
+
+	# connect to open_vpn: openvpn_connect()
+	def openvpn_connect(self):
+		is_connected = False
+		
+		print("Connecting to vpn server...")
+		try:
+			is_connected = self.get_ip()
+		except:
+			is_connected = False
+
+		if is_connected:
+			if self.modify_dns():
+				if self.manage_ipv6(disable_ipv6=True):
+					var = subprocess.run(["sudo", "openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					print(var)
+					# var.wait()
+					self.ip_swap("connect", is_connected)
+				else:
+					print("No IPV6 backup file found")
+			else:
+				print("No DNS restore file were found")
+		else:
+			print("There is no internet connection.")
+
+	# disconnect from open_vpn: openvpn_disconnect()
+	def openvpn_disconnect(self):
+		getPID = False
+		is_connected = False
+		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
+		try:
+			for command in command_list:
+				getPID = cmd_command(command)
+				if getPID:
+					break
+		except:
+			# print("cant find running openvpn process")
+			return False	
+		
+		print("Disconnecting from vpn server...")
+		if getPID:
+			try:
+				is_connected = self.get_ip()
+			except:
+				is_connected = False
+			if self.modify_dns(restore_original_dns=True):
+				if self.manage_ipv6(disable_ipv6=False):
+					var = subprocess.run(["sudo", "pkill", "openvpn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					print(var)
+					# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
+					# var.wait()
+					self.ip_swap("disconnect", is_connected)
+				else:
+					print("Could not restore IPV6")
+			else:
+				print("Could not restore DNS")
+		else:
+			print("Unable to disconnect, no OpenVPN process was found.")
+			return False
+
+	# Optimize when disconnecting, check for openvpn pid
+	def ip_swap(self, action, actual_IP):
+		success_msg = "Connected to vpn server."
+		fail_msg = "Unable to connect to vpn server."
+		new_IP = False
+
+		if action == "disconnect":
+			success_msg = "Disconnected from vpn server."
+			fail_msg = "Unable to disconnected from vpn server."
+		
+		print("value of actual IP", self.actual_ip)
+		try:
+			new_IP = self.get_ip()
+		except:
+			print("Unable to get new IP")
+
+		if (actual_IP and new_IP) and actual_IP != new_IP:
+			self.actual_ip = actual_IP
+			print("New value of actual IP", self.actual_ip)
+			print(success_msg)
+			delete_folder_recursive(CACHE_FOLDER)
+		else:
+			print(fail_msg)
 
 	def generate_ovpn_file(self):
 		'''Generates OVPN files
@@ -99,56 +184,6 @@ class ConnectionManager():
 		if create_file(OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
 			return True
-		
-	def check_requirments(self):
-		allReqCheck = 6
-		checker = {
-			'check_python_version': {'name': 'Python Version is above 3.3', 'return': self.check_python_version()},
-			'is_internet_working_normally': {'name': 'Your internet is working normally', 'return':self.is_internet_working_normally()},
-			'is_profile_initialized': {'name': 'Your profile is initialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
-			'is_openvpn_installed': {'name': 'OpenVPN is installed', 'return':self.is_openvpn_installed()}, 
-			'is_open_resolv_installed': {'name': 'Open Resolv installed', 'return': self.is_open_resolv_installed('/etc/', 'resolv.conf')},
-			'is_is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.is_update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
-		}
-		for check in checker:
-			if not checker[check]['return']:
-				allReqCheck -= allReqCheck
-			print(f"{checker[check]['name']}: {checker[check]['return']}")
-		return allReqCheck == 6
-
-	def initialize_user_profile(self):
-		self.user_manager.create_user_credentials()
-		self.user_manager.create_server_conf()
-	
-	def edit_user_profile(self):
-		if self.user_manager.ask_what_to_edit():
-			print("Data updated successfully")
-
-	# check if profile was created/initialized: check_if_profile_initialized()
-	def check_if_profile_initialized(self, requirments_check=False):
-		'''Checks if user profile is configured/intialized.
-
-		Returns:
-		------
-		Bool:
-			1 - Returns True if user already is configured/intialized.
-			2 - Returns True if no user was found and a new one was configured/initialized.
-			3 - Returns False if it was unable to configure/initialize a new user. 
-		'''
-		if self.user_manager.check_if_user_exist():
-			#print("User exists")
-			return True
-		else:
-			if(requirments_check == False):
-				userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
-				if(userChoice[0].lower() == 'y'):
-					if self.user_manager.create_server_conf() and self.user_manager.create_user_credentials():
-						print("User created succesfully!")
-						return True
-					print("Unable to create user")
-					return False
-			else:
-				return False
  
  	# check for ip: get_ip()
 	def get_ip(self):
@@ -211,98 +246,6 @@ class ConnectionManager():
 			return True
 		return False
 
-	def check_python_version(self):
-		pythonVersion = cmd_command(["python", "--version"])
-		if pythonVersion and pythonVersion.split(' ')[1] > '3.3':
-			return True
-		return False
-
-	# check if openresolv is installed: is_open_resolv_installed()
-	def is_open_resolv_installed(self, path, fileName):
-		return walk_to_file(path, fileName)
-	
-	# check for update_resolv_conf()
-	def is_update_resolv_conf_installed(self, path, fileName):
-		return walk_to_file(path, fileName)
-
-	# connect to open_vpn: openvpn_connect()
-	def openvpn_connect(self):
-		# config_path = HOME + "/" + OVPN_FILE
-		# credentials_path = HOME + "/" + USER_CRED_FILE
-		is_connected = False
-		
-		print("Connecting to vpn server...")
-		try:
-			is_connected = self.get_ip()
-		except:
-			is_connected = False
-
-		if is_connected:
-			if self.modify_dns() and self.manage_ipv6(disable_ipv6=True):
-				var = subprocess.Popen(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				print(var)
-				var.wait()
-				self.ip_swap("connect", is_connected)
-		else:
-			print("There is no internet connection.")
-
-	# disconnect from open_vpn: openvpn_disconnect()
-	def openvpn_disconnect(self):
-		getPID = False
-		is_connected = False
-		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
-		try:
-			for command in command_list:
-				getPID = cmd_command(command)
-				if getPID:
-					break
-		except:
-			# print("cant find running openvpn process")
-			return False	
-		
-		print("Disconnecting from vpn server...")
-		if getPID:
-			try:
-				is_connected = self.get_ip()
-			except:
-				is_connected = False
-			if self.modify_dns(restore_original_dns=True):
-				self.manage_ipv6(disable_ipv6=False)
-				var = subprocess.Popen(["sudo","kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
-				var.wait()
-				self.ip_swap("disconnect", is_connected)
-		else:
-			print("Unable to disconnect, no OpenVPN process was found.")
-			return False
-
-	# Optimize when disconnecting, check for openvpn pid
-	def ip_swap(self, action, actual_IP):
-		success_msg = "Connected to vpn server."
-		fail_msg = "Unable to connect to vpn server."
-		new_IP = False
-
-		if action == "disconnect":
-			success_msg = "Disconnected from vpn server."
-			fail_msg = "Unable to disconnected from vpn server."
-		
-		print("value of actual IP", self.actual_ip)
-		try:
-			new_IP = self.get_ip()
-		except:
-			print("Unable to get new IP")
-
-		if (actual_IP and new_IP) and actual_IP != new_IP:
-			self.actual_ip = actual_IP
-			print("New value of actual IP", self.actual_ip)
-			print(success_msg)
-			delete_folder_recursive(CACHE_FOLDER)
-		else:
-			print(fail_msg)
-
-	def cache_servers(self):
-		self.server_manager.collectServerList()
-
 	def openvpn_service_manager(self, action):
 		# check first if servers are cached!
 		servers_are_cached = False
@@ -331,7 +274,6 @@ class ConnectionManager():
 			print("\n"+success_msg+"\n")
 		except:
 			print("\n"+fail_msg+"\n")
-
 
 	def generate_ovpn_for_boot(self):
 		country = input("Which country to connect to: ")
@@ -367,23 +309,6 @@ class ConnectionManager():
 			print("There is no such file, maybe servers are not cached ?")
 			return False
 
-	def copy_credentials(self):
-		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
-		try:
-			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
-				for cmd in cmds:
-					subprocess.run(["sudo", "bash", "-c", cmd])
-			else:
-				subprocess.run(["sudo", "bash", "-c", cmds[1]])
-			print("Copied credentials")
-			return True
-		except:
-				print("Unable to copy credentials")
-				return False
-
-	# install update_resolv_conf: install_update_resolv_conf()
-
-
 	# manage IPV6: manage_ipv6()
 	def manage_ipv6(self, disable_ipv6):
 		ipv6 = False
@@ -399,6 +324,7 @@ class ConnectionManager():
 			if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 				cmd_command(["ip", "addr", "add", content[1] , "dev", content[0]],  as_sudo=True)
 				print("IPV6 Restored and linklocal restored.")
+				delete_file(IPV6_BACKUP_FILE)
 				return True
 			print("Did not manage to restore IPV6, needs to be restored manually.")
 			return False
@@ -426,10 +352,91 @@ class ConnectionManager():
 			else:
 				return False
 
+	def copy_credentials(self):
+		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
+		try:
+			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
+				for cmd in cmds:
+					subprocess.run(["sudo", "bash", "-c", cmd])
+			else:
+				subprocess.run(["sudo", "bash", "-c", cmds[1]])
+			print("Copied credentials")
+			return True
+		except:
+				print("Unable to copy credentials")
+				return False
+
 	def restart_network_manager(self):
-			print("systemctl restart", "NetworkManager")
-			try:
-				subprocess.run(["systemctl", "restart", "NetworkManager"])
-				print("\nRestarted network manager\n")
-			except:
-				print("Cant restart network manager")
+		print("systemctl restart", "NetworkManager")
+		try:
+			subprocess.run(["systemctl", "restart", "NetworkManager"])
+			print("\nRestarted network manager\n")
+		except:
+			print("Cant restart network manager")
+
+	def cache_servers(self):
+		self.server_manager.collectServerList()
+
+	def check_requirments(self):
+		allReqCheck = 6
+		checker = {
+			'check_python_version': {'name': 'Python Version is above 3.3', 'return': self.check_python_version()},
+			'is_internet_working_normally': {'name': 'Your internet is working normally', 'return':self.is_internet_working_normally()},
+			'is_profile_initialized': {'name': 'Your profile is initialized', 'return': self.check_if_profile_initialized(requirments_check=True)},
+			'is_openvpn_installed': {'name': 'OpenVPN is installed', 'return':self.is_openvpn_installed()}, 
+			'is_open_resolv_installed': {'name': 'Open Resolv installed', 'return': self.is_open_resolv_installed('/etc/', 'resolv.conf')},
+			'is_is_update_resolv_conf_installed': {'name': 'Update resolv is installed', 'return': self.is_update_resolv_conf_installed('/etc/openvpn/', 'update-resolv-conf')}
+		}
+		for check in checker:
+			if not checker[check]['return']:
+				allReqCheck -= allReqCheck
+			print(f"{checker[check]['name']}: {checker[check]['return']}")
+		return allReqCheck == 6
+
+	# check if profile was created/initialized: check_if_profile_initialized()
+	def check_if_profile_initialized(self, requirments_check=False):
+		'''Checks if user profile is configured/intialized.
+
+		Returns:
+		------
+		Bool:
+			1 - Returns True if user already is configured/intialized.
+			2 - Returns True if no user was found and a new one was configured/initialized.
+			3 - Returns False if it was unable to configure/initialize a new user. 
+		'''
+		if self.user_manager.check_if_user_exist():
+			#print("User exists")
+			return True
+		else:
+			if(requirments_check == False):
+				userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
+				if(userChoice[0].lower() == 'y'):
+					if self.user_manager.create_server_conf() and self.user_manager.create_user_credentials():
+						print("User created succesfully!")
+						return True
+					print("Unable to create user")
+					return False
+			else:
+				return False
+
+	def initialize_user_profile(self):
+		self.user_manager.create_user_credentials()
+		self.user_manager.create_server_conf()
+	
+	def edit_user_profile(self):
+		if self.user_manager.ask_what_to_edit():
+			print("Data updated successfully")
+
+	def check_python_version(self):
+		pythonVersion = cmd_command(["python", "--version"])
+		if pythonVersion and pythonVersion.split(' ')[1] > '3.3':
+			return True
+		return False
+
+	# check if openresolv is installed: is_open_resolv_installed()
+	def is_open_resolv_installed(self, path, fileName):
+		return walk_to_file(path, fileName)
+	
+	# check for update_resolv_conf()
+	def is_update_resolv_conf_installed(self, path, fileName):
+		return walk_to_file(path, fileName)
