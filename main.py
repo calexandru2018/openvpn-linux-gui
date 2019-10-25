@@ -5,6 +5,11 @@ from include.connection_manager import ConnectionManager
 # app main class
 class AppEntry():
 	def __init__(self):
+		self.rootDir = os.getcwd()
+		# this in case run from home location
+		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
+		# this in case run from inside folder
+		self.rootDir = self.rootDir
 		self.showMenu()
 		# user home folder
 		self.rootDir = os.getcwd()
@@ -86,8 +91,8 @@ class AppEntry():
 	!!!!                                                !!!!   
 	!!!!	       Made by Alexandru Cheltuitor         !!!!
 	!!!!                                                !!!!
-	!!!!	        openvpn-linux-cli                   !!!!
-	!!!!                   Alpha v.1                    !!!!
+	!!!!	            openvpn-linux-cli               !!!!
+	!!!!                   Alpha v0.1.0                 !!!!
 	!!!!                                                !!!! 
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -98,8 +103,18 @@ class AppEntry():
 	[5] - Generate OPVN file\t [12] - Restart "start on boot" service
 	[6] - OpenVPN Connect\t\t [13] - Restart NetworkManager
 	[7] - OpenVPN Disconnect\t [14] - Manage IPV6
-		
-			
+
+
+	[15] - End active VPN sessions\t\t 
+	[16] - Check DNS\t\t
+	[17] - Quick Connect\t\t
+	[18] - Connect to last selected\t\t
+	[19] - Connect to quickest[country]\t\t
+	[20] - Connect to P2P\t\t
+	[21] - Connect to TOR\t\t
+	[22] - Connect to Secure Core\t\t
+
+
 	[0] - Exit""")
 		print("--------------------------------------------------------------------------------------")
 

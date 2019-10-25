@@ -1,26 +1,5 @@
 import os, shutil, subprocess
 
-def returnFileExist(path):
-	'''Checks if file exists in specified folder.
-	
-	Parameters:
-	----------
-	`folderName` : string
-		The name of the folder.
-	`fileName` : string
-		The name of the file.
-	`fileType` : string
-		The type/extension - json or txt.
-	Returns:
-	-------
-	bool:
-		Returns True if file exists, False otherwise.
-	'''
-	if(os.path.isfile(path)):
-		return True
-	else:
-		return False
-
 def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	"""Searches for a file by either looking into subdirectories or comparing filenames
 
@@ -47,7 +26,7 @@ def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 			else:
 				return False
 
-def createFile(path, content):
+def create_file(path, content):
 	'''Creates the file and writes content to it.
 	
 	Parameters:
@@ -67,7 +46,7 @@ def createFile(path, content):
 		Returns True if file is created, False otherwise.
 	'''
 
-	if not returnFolderExist(path): 
+	if not folder_exist(path): 
 		#print(path)
 		try:
 			newFile = open(path, "w+")
@@ -80,7 +59,7 @@ def createFile(path, content):
 	else:
 		return False
 
-def editFile(path, content):
+def edit_file(path, content):
 	'''Edits the specified file, first checking if it exists.
 	
 	Parameters:
@@ -99,7 +78,7 @@ def editFile(path, content):
 	bool:
 		Returns True if file is created, False otherwise.
 	'''
-	if returnFolderExist(path): 
+	if folder_exist(path): 
 		try:
 			existingFile = open(path, "a+")
 			existingFile.write(content)
@@ -111,7 +90,7 @@ def editFile(path, content):
 	else:
 		return False
 
-def readFile(path, file):
+def read_file(path, file):
 	'''Reads the specified file.
 	
 	Parameters:
@@ -128,7 +107,7 @@ def readFile(path, file):
 	bool(uknown ?):
 		Returns the content if file exists and can be read from, False otherwise.
 	'''
-	if returnFolderExist(path): 
+	if folder_exist(path): 
 		try:
 			file = open(path+file, "r")
 			return file.read()
@@ -140,7 +119,7 @@ def readFile(path, file):
 		print("____")
 		return False
 
-def deleteFile(path, file):
+def delete_file(path, file):
 	'''Deletes the specified file.
 	
 	Parameters:
@@ -157,7 +136,7 @@ def deleteFile(path, file):
 	bool:
 		Returns True if file exists and can be deleted, False otherwise.
 	'''
-	if returnFolderExist(path):  
+	if folder_exist(path):  
 		try:
 			os.remove(path+file)
 		except:
@@ -169,15 +148,15 @@ def deleteFile(path, file):
 
 import os, shutil
 
-def returnFolderExist(path):
+def folder_exist(path):
 	if(os.path.isdir(path)):
 		return True
 	else:
 		return False
 
-def createFolder(path):
+def create_folder(path):
 	#print("Folder created in : ", self.dirPath + "/" + folderName)
-	if not returnFolderExist(path): 
+	if not folder_exist(path): 
 		try:
 			os.mkdir(path)
 			return True
@@ -186,18 +165,8 @@ def createFolder(path):
 	else:
 		return False
 
-def deleteFolder(path):
-	if returnFolderExist(path): 
-		try:
-			os.rmdir(path)
-			return True
-		except:
-			return False
-	else:
-		return False
-
 def delete_folder_recursive(path):
-	if returnFolderExist(path): 
+	if folder_exist(path): 
 		try:
 			shutil.rmtree(path)
 			return True
@@ -216,12 +185,12 @@ def auto_select_optimal_server(data):
 	connectInfo = (connectToID, highestScore)
 	return connectInfo
 
-def decodeToASCII(byteValue):
+def to_ascii(byteValue):
 	if byteValue:
 		return byteValue.decode('ascii')
 	return False
 
-def cmd_command(*args, return_output=True, as_sudo=False):
+def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	# try:
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE)):
 		return True
@@ -233,6 +202,6 @@ def cmd_command(*args, return_output=True, as_sudo=False):
 			else:
 				x = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-			return decodeToASCII(x.stdout).strip()
+			return to_ascii(x.stdout).strip()
 		except:
 			return False
