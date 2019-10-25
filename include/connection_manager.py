@@ -23,7 +23,7 @@ class ConnectionManager():
 
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
-		resolv_conf_path = walk_to_file("/etc", "resolv.conf", is_return_bool=False)
+		resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
 		
 		if(resolv_conf_path):
 			print("Modifying dns...")
@@ -282,13 +282,19 @@ class ConnectionManager():
 	def ip_swap(self, action, actual_IP):
 		success_msg = "Connected to vpn server."
 		fail_msg = "Unable to connect to vpn server."
+		new_IP = False
 
 		if action == "disconnect":
 			success_msg = "Disconnected from vpn server."
 			fail_msg = "Unable to disconnected from vpn server."
 		
 		print("value of actual IP", self.actual_ip)
-		if actual_IP and actual_IP != self.actual_ip:
+		try:
+			new_IP = self.get_ip()
+		except:
+			print("Unable to get new IP")
+
+		if (actual_IP and new_IP) and actual_IP != new_IP:
 			self.actual_ip = actual_IP
 			print("New value of actual IP", self.actual_ip)
 			print(success_msg)
