@@ -1,6 +1,6 @@
 import json, getpass
 
-from include.utils.constants import (USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE)
+from include.utils.constants import (USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE, PATH_TO_USER_FOLDER, PATH_TO_USER_CRED_FILE, PATH_TO_USER_PREF_FILE)
 from include.utils.methods import (walk_to_file, create_file, read_file, delete_file, create_folder,folder_exist)
 
 class UserManager():
@@ -28,10 +28,10 @@ class UserManager():
 
 	# Create server configuration (tier, protocol)
 	def create_server_conf(self):
-		if not walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_PREF_FILE):
+		if not walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_PREF_FILE.split("/")[-1]):
 			self.ask_for_server_config()
-			if folder_exist(self.rootDir+"/"+USER_FOLDER) or create_folder(self.rootDir+"/"+USER_FOLDER):
-				if create_file(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE , json.dumps(self.user_server_conf, indent=2)):
+			if folder_exist(PATH_TO_USER_FOLDER) or create_folder(PATH_TO_USER_FOLDER):
+				if create_file(PATH_TO_USER_PREF_FILE, json.dumps(self.user_server_conf, indent=2)):
 					return True
 				print("Unable to create file")
 				return False
@@ -42,8 +42,8 @@ class UserManager():
 
 	# Edit server configuration .json file
 	def edit_server_conf(self):
-		if walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_PREF_FILE):
-			out = json.loads(read_file(self.rootDir+"/"+USER_FOLDER+"/", USER_PREF_FILE ))
+		if walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_PREF_FILE.split("/")[-1]):
+			out = json.loads(read_file(PATH_TO_USER_PREF_FILE))
 			print("Your config file has stored: ", out)
 			while True:
 				userInput = input("Would you like to edit your data ? [y/n]: ")
@@ -53,8 +53,8 @@ class UserManager():
 				
 				self.ask_for_server_config()
 				
-				if delete_file(self.rootDir+"/"+USER_FOLDER+"/", USER_PREF_FILE ):
-					if create_file(self.rootDir+"/"+USER_FOLDER+"/"+USER_PREF_FILE ,  json.dumps(self.user_server_conf, indent=2)):
+				if delete_file(PATH_TO_USER_PREF_FILE):
+					if create_file(PATH_TO_USER_PREF_FILE,  json.dumps(self.user_server_conf, indent=2)):
 						return True
 				print(f"Unable to edit, unable to find folder {USER_FOLDER} and/or file {USER_PREF_FILE }")
 				continue
@@ -63,11 +63,11 @@ class UserManager():
 
 	# Create hidden file with users credentials
 	def create_user_credentials(self):
-		if not walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_CRED_FILE):
+		if not walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_CRED_FILE.split("/")[-1]):
 			self.ask_for_user_credentials()
 			user_cred = self.user_credentials['username']  + "\n" + self.user_credentials['password'] 
-			if create_folder(self.rootDir+"/"+USER_FOLDER):
-				if create_file(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE, user_cred):
+			if create_folder(PATH_TO_USER_FOLDER):
+				if create_file(PATH_TO_USER_CRED_FILE, user_cred):
 					return True
 				print("Unable to create file.")
 				return False
@@ -77,11 +77,11 @@ class UserManager():
 		return False
 
 	def edit_user_credentials(self):
-		if walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_CRED_FILE):
+		if walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_CRED_FILE.split("/")[-1]):
 			self.ask_for_user_credentials()
 			user_cred = self.user_credentials['username']  + "\n" + self.user_credentials['password'] 
-			if delete_file(self.rootDir+"/"+USER_FOLDER+"/", USER_CRED_FILE):
-				if create_file(self.rootDir+"/"+USER_FOLDER+"/"+USER_CRED_FILE, user_cred):
+			if delete_file(PATH_TO_USER_CRED_FILE):
+				if create_file(PATH_TO_USER_CRED_FILE, user_cred):
 					return True
 				print(f"Unable to edit, unable to find folder {USER_FOLDER} and/or file {USER_CRED_FILE}")
 				return False
@@ -99,12 +99,12 @@ class UserManager():
 			If True then return ovpn credentials, otherwise return server confs.
 		'''
 		#file_name = USER_PREF_FILE _name'
-		file_name = USER_PREF_FILE 
+		file_name = PATH_TO_USER_PREF_FILE.split("/")[-1] 
 		if is_user_credentials:
-			file_name = USER_CRED_FILE
+			file_name = PATH_TO_USER_CRED_FILE.split("/")[-1] 
 
-		if walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", file_name):
-			return read_file(self.rootDir+"/"+USER_FOLDER+"/", file_name)
+		if walk_to_file(PATH_TO_USER_FOLDER, file_name):
+			return read_file(PATH_TO_USER_FOLDER, file_name)
 		return False
 
 	# Check if user exists (both files should be True to return True)
@@ -116,8 +116,8 @@ class UserManager():
 		Bool:
 			Return True if both file exists, False otherwise.
 		'''
-		if walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_PREF_FILE):
-			if walk_to_file(self.rootDir+"/"+USER_FOLDER+"/", USER_CRED_FILE):
+		if walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_PREF_FILE.split("/")[-1]):
+			if walk_to_file(PATH_TO_USER_FOLDER, PATH_TO_USER_CRED_FILE.split("/")[-1]):
 				return True
 			print("Missing user credentials")
 		#print("Missing user server configuration file (.json)")
