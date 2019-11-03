@@ -55,6 +55,30 @@ class ConnectionManager():
 		else:
 			print("The \"resolv.conf\" file was not found on your system.")
 			return False
+		
+	# Optimize when disconnecting, check for openvpn pid
+	def ip_swap(self, action, actual_IP):
+		success_msg = "Connected to vpn server."
+		fail_msg = "Unable to connect to vpn server."
+		new_IP = False
+
+		if action == "disconnect":
+			success_msg = "Disconnected from vpn server."
+			fail_msg = "Unable to disconnected from vpn server."
+		
+		# print("value of actual IP", self.actual_ip)
+		try:
+			new_IP = get_ip()
+		except:
+			print("Unable to get new IP")
+
+		if (actual_IP and new_IP) and actual_IP != new_IP:
+			self.actual_ip = actual_IP
+			print("New IP: ", self.actual_ip)
+			print(success_msg)
+			delete_folder_recursive(CACHE_FOLDER)
+		else:
+			print(fail_msg)
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
@@ -103,30 +127,6 @@ class ConnectionManager():
 		else:
 			print("Unable to disconnect, no OpenVPN process was found.")
 			return False
-
-	# Optimize when disconnecting, check for openvpn pid
-	def ip_swap(self, action, actual_IP):
-		success_msg = "Connected to vpn server."
-		fail_msg = "Unable to connect to vpn server."
-		new_IP = False
-
-		if action == "disconnect":
-			success_msg = "Disconnected from vpn server."
-			fail_msg = "Unable to disconnected from vpn server."
-		
-		# print("value of actual IP", self.actual_ip)
-		try:
-			new_IP = get_ip()
-		except:
-			print("Unable to get new IP")
-
-		if (actual_IP and new_IP) and actual_IP != new_IP:
-			self.actual_ip = actual_IP
-			print("New IP: ", self.actual_ip)
-			print(success_msg)
-			delete_folder_recursive(CACHE_FOLDER)
-		else:
-			print(fail_msg)
 
 	def generate_ovpn_file(self):
 		'''Generates OVPN files
@@ -280,20 +280,6 @@ class ConnectionManager():
 			else:
 				return False
 
-	def copy_credentials(self):
-		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
-		try:
-			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
-				for cmd in cmds:
-					subprocess.run(["sudo", "bash", "-c", cmd])
-			else:
-				subprocess.run(["sudo", "bash", "-c", cmds[1]])
-			print("Copied credentials")
-			return True
-		except:
-				print("Unable to copy credentials")
-				return False
-
 	def restart_network_manager(self):
 		print("systemctl restart", "NetworkManager")
 		try:
@@ -312,3 +298,17 @@ class ConnectionManager():
 	def edit_user_profile(self):
 		if self.user_manager.ask_what_to_edit():
 			print("Data updated successfully")
+
+	def copy_credentials(self):
+		cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
+		try:
+			if(not os.path.isdir("/opt/"+PROJECT_NAME+"/")):
+				for cmd in cmds:
+					subprocess.run(["sudo", "bash", "-c", cmd])
+			else:
+				subprocess.run(["sudo", "bash", "-c", cmds[1]])
+			print("Copied credentials")
+			return True
+		except:
+				print("Unable to copy credentials")
+				return False
