@@ -1,6 +1,7 @@
 import os, subprocess
 
 from include.connection_manager import ConnectionManager
+from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
 
 # app main class
@@ -14,7 +15,7 @@ class AppEntry():
 		while True:
 			self.choice = int(input("[MAIN MENU] What would you like to do: "))
 			if(self.choice == 1):
-				self.connMan.check_requirments()
+				check_requirments()
 				continue
 			elif(self.choice == 2):
 				self.connMan.initialize_user_profile()
