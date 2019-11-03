@@ -23,33 +23,35 @@ class ConnectionManager():
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
 		path_resolv_conf = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
-		
+
 		if(path_resolv_conf):
 			print("Modifying dns...")
 			if not restore_original_dns:
 				if shutil.copy(path_resolv_conf, RESOLV_BACKUP_FILE):
-					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
-					try:
-						if subprocess.run(["sudo", "bash", "-c", cmd]).returncode == 0:
-							print("DNS updated with new configurations.")
-							return True
-						else:
-							print("Unable to run CMD command in backup")
-					except:
-						print("Unable to update DNS configurations")
-						return False
+					# should only make a backup of the original DNS confs 
+					print("DNS backup was made.")
+					return True
+					# cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
+					# try:
+					# 	if subprocess.run(["sudo", "bash", "-c", cmd]).returncode == 0:
+					# 		print("DNS updated with new configurations.")
+					# 		return True
+					# 	else:
+					# 		print("Unable to run CMD command in backup")
+					# except:
+					# 	print("Unable to update DNS configurations")
+					# 	return False
 				else:
-					print("Unable to back DNS configurations.")
+					print("Unable to backup DNS configurations.")
 					return False
 			else:
 				try:
 					with open(RESOLV_BACKUP_FILE) as f:
 						content = f.read()
-					# cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
-					cmd = "cat > /etc/resolv.conf <<EOF \nHELLO\n EOF"
+					cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
 					if subprocess.run(["sudo", "bash", "-c", cmd]).returncode == 0:
-						#delete_file(RESOLV_BACKUP_FILE)
-						print("Restored to original DNS configurations.")
+						delete_file(RESOLV_BACKUP_FILE)
+						print("Restored original DNS configurations.")
 						return True
 					else:
 						print("Unable to run CMD command in restore")
