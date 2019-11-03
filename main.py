@@ -1,30 +1,21 @@
 import os, subprocess
 
 from include.connection_manager import ConnectionManager
+from include.check_requirments import (check_requirments)
+from include.utils.constants import (USER_CRED_FILE)
 
 # app main class
 class AppEntry():
 	def __init__(self):
-		self.rootDir = os.getcwd()
-		# this in case run from home location
-		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
-		# this in case run from inside folder
-		self.rootDir = self.rootDir
 		self.showMenu()
-		# user home folder
-		self.rootDir = os.getcwd()
-		# this in case run from home location
-		#self.rootDir = self.rootDir+"/Python/protonvpn-linux-gui/"
-		# this in case run from inside folder
-		self.rootDir = self.rootDir
-		self.connMan = ConnectionManager(self.rootDir)
+		self.connMan = ConnectionManager()
 		self.switch()
 
 	def switch(self):
 		while True:
 			self.choice = int(input("[MAIN MENU] What would you like to do: "))
 			if(self.choice == 1):
-				self.connMan.check_requirments()
+				check_requirments()
 				continue
 			elif(self.choice == 2):
 				self.connMan.initialize_user_profile()
@@ -75,6 +66,9 @@ class AppEntry():
 				elif choice[0].lower() == "n":
 					_choice_ == False 
 				self.connMan.manage_ipv6(disable_ipv6=_choice_)
+				continue
+			elif(self.choice == 15):
+				print("None")
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
