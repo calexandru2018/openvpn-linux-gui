@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 user_conf
 cache_servers
+include/content.py
 
 # C extensions
 *.so
