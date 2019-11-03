@@ -1,7 +1,7 @@
 import json, getpass
 
 from include.utils.constants import (USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE, USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE)
-from include.utils.methods import (walk_to_file, create_file, read_file, delete_file, create_folder,folder_exist)
+from include.utils.methods import (walk_to_file, create_file, read_file, edit_file, delete_file, create_folder,folder_exist)
 
 class UserManager():
 	'''Creates, edits and deletes user data.
@@ -42,8 +42,8 @@ class UserManager():
 	# Edit server configuration .json file
 	def edit_server_conf(self):
 		if walk_to_file(USER_FOLDER, USER_PREF_FILE.split("/")[-1]):
-			out = json.loads(read_file(USER_PREF_FILE))
-			print("Your config file has stored: ", out)
+			user_pref = json.loads(read_file(USER_PREF_FILE))
+			print("Your config file has stored: ", user_pref)
 			while True:
 				userInput = input("Would you like to edit your data ? [y/n]: ")
 
@@ -52,11 +52,14 @@ class UserManager():
 				
 				self.ask_for_server_config()
 				
-				if delete_file(USER_PREF_FILE):
-					if create_file(USER_PREF_FILE,  json.dumps(self.user_server_conf, indent=2)):
-						return True
+				user_pref['tier'] = self.user_server_conf['tier']
+				user_pref['protocol'] = self.user_server_conf['protocol']
+
+				if edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False):
+					return True
+
 				print(f"Unable to edit, unable to find folder {USER_FOLDER} and/or file {USER_PREF_FILE }")
-				continue
+				break
 		else:
 			print("There are no config files to edit.")
 
@@ -97,7 +100,6 @@ class UserManager():
 		`is_user_credentials`:
 			If True then return ovpn credentials, otherwise return server confs.
 		'''
-		#file_name = USER_PREF_FILE _name'
 		file_name = USER_PREF_FILE.split("/")[-1] 
 		if is_user_credentials:
 			file_name = USER_CRED_FILE.split("/")[-1] 
@@ -130,10 +132,16 @@ class UserManager():
 	def ask_for_server_config(self):
 		while True: 
 			try:
-				self.user_server_conf['tier'] = int(input("Type in your tier ([1]-Free, [2]-Basic, [3]-Plus, [4]-Visionary): "))
-				if((self.user_server_conf['tier']-1) >= 0 and (self.user_server_conf['tier']-1) <= 3):
-					# print("Data saved")
-					break
+				user_tier = input("Type in your tier ([0]Free, [1]Basic, [2]Plus, [3]Visionary): ")
+				if user_tier[0].lower() == "f" or int(user_tier[0]) == 0:
+					self.user_server_conf['tier'] = 0
+				elif user_tier[0].lower() == "b" or int(user_tier[0]) == 1:
+					self.user_server_conf['tier'] = 1
+				elif user_tier[0].lower() == "p"  or int(user_tier[0]) == 2:
+					self.user_server_conf['tier'] = 2
+				elif user_tier[0].lower() == "v" or int(user_tier[0]) == 3:
+					self.user_server_conf['tier'] = 3
+				break
 			except:
 				print("Incorrect, the tier should be between 1-4, try again.")
 				continue

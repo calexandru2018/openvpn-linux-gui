@@ -161,6 +161,7 @@ class ConnectionManager():
 
 		connectInfo = auto_select_optimal_server(data, user_pref['tier'])
 		# print(json.dumps(connectInfo, indent=3))
+		# print(connectInfo)
 		user_pref['last_conn_server_id'] = connectInfo[0]
 		user_pref['last_conn_sever_name'] = connectInfo[2]
 		user_pref['last_conn_sever_protocol'] = user_pref['protocol']
