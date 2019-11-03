@@ -187,14 +187,16 @@ def delete_folder_recursive(path):
 	else:
 		return False
 
-def auto_select_optimal_server(data):
-	highestScore = 0
-	connectToID = ''
+def auto_select_optimal_server(data, tier):
+	best_score = 999
+	connection_ID = ''
+	server_name = ''
 	for server in data['serverList']:
-		if (data['serverList'][server]['score'] >= highestScore) and (int(data['serverList'][server]['tier']) == 1):
-			highestScore = data['serverList'][server]['score']
-			connectToID = data['serverList'][server]['id']
-	connectInfo = (connectToID, highestScore)
+		if (data['serverList'][server]['score'] < best_score) and (int(data['serverList'][server]['tier']) == tier):
+			best_score = data['serverList'][server]['score']
+			connection_ID = data['serverList'][server]['id']
+			server_name = data['serverList'][server]
+	connectInfo = (connection_ID, best_score, server_name)
 	return connectInfo
 
 def to_ascii(byteValue):
@@ -203,7 +205,6 @@ def to_ascii(byteValue):
 	return False
 
 def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
-	# try:
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
 	else:
