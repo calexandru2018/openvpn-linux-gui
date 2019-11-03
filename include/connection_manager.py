@@ -48,6 +48,7 @@ class ConnectionManager():
 						cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
 						subprocess.run(["sudo", "bash", "-c", cmd])
 						print("Restored to original DNS configurations.")
+						delete_file(RESOLV_BACKUP_FILE)
 						return True
 				except:
 					print("Unable to restore original DNS configurations, try restarting the Network Manager.")
