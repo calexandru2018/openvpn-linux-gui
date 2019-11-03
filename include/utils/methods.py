@@ -1,4 +1,8 @@
-import os, shutil, subprocess
+import os, shutil, subprocess, requests, re
+
+from include.utils.constants import (
+	PROTON_CHECK_URL, PROTON_HEADERS, DYNDNS_CHECK_URL
+)
 
 def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	"""Searches for a file by either looking into subdirectories or comparing filenames
@@ -213,3 +217,22 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 			return to_ascii(output.stdout).strip()
 		except:
 			return False
+
+# check for ip: get_ip()
+def get_ip():
+	'''Gets the host IP from two different sources and compares them.
+	
+	Returns:
+	-------
+	Bool:
+		True if the IP's match, False otherwise.
+	'''
+	dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
+	dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
+
+	protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
+
+	if dyndnsIp == protonRequest['IP']:
+		#print("Internet is OK and your IP is:", dyndnsIp)
+		return protonRequest['IP']
+	return False
