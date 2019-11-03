@@ -6,18 +6,16 @@ from include.server_manager import ServerManager
 # Helper methods and constants 
 from include.utils.methods import (
 	walk_to_file, create_file, read_file, delete_file, delete_folder_recursive,
-	cmd_command, auto_select_optimal_server, get_ip
+	cmd_command, auto_select_optimal_server, get_ip, edit_file
 )
 from include.utils.constants import (
-	HOME, PROJ_PATH, USER_CRED_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, DYNDNS_CHECK_URL, USER_FOLDER, OVPN_FILE, USER_CRED_FILE, CACHE_FOLDER, PROTON_CHECK_URL, PROTON_HEADERS, PROJECT_NAME,
-	PROTON_DNS, ON_BOOT_PROCESS_NAME
+	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
+	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
 )
 class ConnectionManager():
 	def __init__(self):
 		self.server_manager = ServerManager()
 		self.user_manager = UserManager()
-		self.actual_ip = False
 
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
@@ -73,8 +71,6 @@ class ConnectionManager():
 			print("Unable to get new IP")
 
 		if (actual_IP and new_IP) and actual_IP != new_IP:
-			self.actual_ip = actual_IP
-			print("New IP: ", self.actual_ip)
 			print(success_msg)
 			delete_folder_recursive(CACHE_FOLDER)
 		else:
@@ -158,20 +154,26 @@ class ConnectionManager():
 			return False
 
 		try:
-			user_selected_protocol = json.loads(self.user_manager.read_user_data())
+			user_pref = json.loads(self.user_manager.read_user_data())
 		except TypeError:
 			print("Profile was not initialized.")
 			return False
 
-		connectInfo = auto_select_optimal_server(data)
-		url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
+		connectInfo = auto_select_optimal_server(data, user_pref['tier'])
+		# print(json.dumps(connectInfo, indent=3))
+		user_pref['last_conn_server_id'] = connectInfo[0]
+		user_pref['last_conn_sever_name'] = connectInfo[2]
+		user_pref['last_conn_sever_protocol'] = user_pref['protocol']
+		url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_pref['protocol']
 
 		serverReq = requests.get(url, headers=(PROTON_HEADERS))
+
 
 		if walk_to_file(USER_FOLDER, OVPN_FILE.split("/")[-1]):
 			delete_file(OVPN_FILE)
 		if create_file(OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
+			edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False)
 			return True
 
 	def openvpn_service_manager(self, action):
@@ -212,10 +214,10 @@ class ConnectionManager():
 			with open(os.path.join(CACHE_FOLDER, file)) as file:
 				data = json.load(file)
 
-			connectInfo = auto_select_optimal_server(data)
-			user_selected_protocol = json.loads(self.user_manager.read_user_data())
+			user_pref = json.loads(self.user_manager.read_user_data())
+			connectInfo = auto_select_optimal_server(data, user_pref['tier'])
 
-			url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_selected_protocol['protocol']
+			url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectInfo[0]+"&Protocol=" + user_pref['protocol']
 			server_req = requests.get(url, headers=(PROTON_HEADERS))
 			original_req = server_req.text
 			start_index = original_req.find("auth-user-pass")
