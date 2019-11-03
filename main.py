@@ -67,8 +67,8 @@ class AppEntry():
 				self.connMan.manage_ipv6(disable_ipv6=_choice_)
 				continue
 			elif(self.choice == 15):
-				print(USER_CRED_FILE.split("/")[-1])
-				break
+				print("None")
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break

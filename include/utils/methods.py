@@ -200,7 +200,7 @@ def to_ascii(byteValue):
 
 def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	# try:
-	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE)):
+	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
 	else:
 		try:
