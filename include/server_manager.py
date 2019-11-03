@@ -67,6 +67,7 @@ class ServerManager():
 				self.serverList[self.country_iso_name] = {'serverList': {}}
 
 			self.serverList[self.country_iso_name]['serverList'][server['Name']] = {
+				'name': server['Name'], 
 				'id': server['ID'], 
 				'load': server['Load'], 
 				'score': server['Score'], 

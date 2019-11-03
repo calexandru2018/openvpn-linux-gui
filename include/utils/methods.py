@@ -63,36 +63,38 @@ def create_file(path, content):
 	else:
 		return False
 
-def edit_file(path, content):
+def edit_file(path, content, append=True):
 	'''Edits the specified file, first checking if it exists.
 	
 	Parameters:
 	----------
-	`folderName` : string
-		The name of the folder.
-	`fileName` : string
-		The name of the file.
-	`fileType` : string
-		The type/extension - json or txt.
+	`path` : string
+		Path to file
 	`content`:
 		The content to write to file.
+	`append` : Bool = True
+		By default it appends to file (a+), if False the it overwrites (w+)
 	
 	Returns:
 	-------
 	bool:
 		Returns True if file is created, False otherwise.
 	'''
-	if folder_exist(path): 
-		try:
-			existingFile = open(path, "a+")
-			existingFile.write(content)
-		except:
-			return False
-		else:
-			existingFile.close()
-			return True
-	else:
+	write_to = "a"
+	if not append:
+		write_to = "w"
+
+	# if folder_exist(path): 
+	try:
+		existingFile = open(path, write_to)
+		existingFile.write(content)
+	except:
 		return False
+	else:
+		existingFile.close()
+		return True
+	# else:
+	# 	return False
 
 def read_file(path, second_arg=False):
 	'''Reads the specified file.
@@ -188,14 +190,19 @@ def delete_folder_recursive(path):
 		return False
 
 def auto_select_optimal_server(data, tier):
+	"""Returns a tuple with information abou the most optimal server.
+	Returns:
+	-------
+	tuple (connection_ID, best_score, server_name) 
+	"""
 	best_score = 999
 	connection_ID = ''
 	server_name = ''
 	for server in data['serverList']:
 		if (data['serverList'][server]['score'] < best_score) and (int(data['serverList'][server]['tier']) == tier):
-			best_score = data['serverList'][server]['score']
+			server_name = data['serverList'][server]['name']
 			connection_ID = data['serverList'][server]['id']
-			server_name = data['serverList'][server]
+			best_score = data['serverList'][server]['score']
 	connectInfo = (connection_ID, best_score, server_name)
 	return connectInfo
 
