@@ -4,6 +4,8 @@ from include.utils.constants import (
 	PROTON_CHECK_URL, PROTON_HEADERS, DYNDNS_CHECK_URL
 )
 
+from include.logger import log
+
 def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	"""Searches for a file by either looking into subdirectories or comparing filenames
 
@@ -15,19 +17,23 @@ def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	for root, dirs, files in os.walk(path):
 		if not in_dirs:
 			if file in files:
+				log.info(f"\"{file}\" was found in \"{root}\" was found.")
 				if not is_return_bool:
 					return os.path.join(root, file)
 				else:
 					return True
 			else:
+				log.warning(f"\"{file}\" was NOT found in \"{root}\" was found.")
 				return False
 		else:
 			if file in dirs:
+				log.info(f"\"{file}\" was found in \"{root}\" was found.")
 				if not is_return_bool:
 					return os.path.join(root, file)
 				else:
 					return True
 			else:
+				log.warning(f"\"{file}\" was NOT found in \"{root}\" was found.")
 				return False
 
 def create_file(path, content):
@@ -51,7 +57,6 @@ def create_file(path, content):
 	'''
 
 	if not folder_exist(path): 
-		#print(path)
 		try:
 			newFile = open(path, "w+")
 			newFile.write(content)
@@ -84,17 +89,16 @@ def edit_file(path, content, append=True):
 	if not append:
 		write_to = "w"
 
-	# if folder_exist(path): 
 	try:
 		existingFile = open(path, write_to)
 		existingFile.write(content)
 	except:
+		log.warning(f"Unable to \"{write_to}\" content on: {path}")
 		return False
 	else:
+		log.info(f"Content was \"{write_to}\" on: \"{path}\"")
 		existingFile.close()
 		return True
-	# else:
-	# 	return False
 
 def read_file(path, second_arg=False):
 	'''Reads the specified file.
@@ -113,7 +117,6 @@ def read_file(path, second_arg=False):
 	bool(uknown ?):
 		Returns the content if file exists and can be read from, False otherwise.
 	'''
-	# if folder_exist(path): 
 	if not second_arg:
 		try:
 			file = open(path, "r")
@@ -130,9 +133,6 @@ def read_file(path, second_arg=False):
 			return False
 		else:
 			file.close()
-	# else:
-	# 	print("____")
-	# 	return False
 
 def delete_file(path):
 	'''Deletes the specified file.
@@ -151,14 +151,14 @@ def delete_file(path):
 	bool:
 		Returns True if file exists and can be deleted, False otherwise.
 	'''
-	# if folder_exist(path):  
+	filename = path.split("/")[-1]
 	try:
 		os.remove(path)
+		log.info(f"File \"{filename}\" was removed.")
 		return True
 	except:
+		log.warning(f"Unable to remove \"{filename}\".")
 		return False
-	# else:
-	# 	return False
 
 import os, shutil
 
@@ -169,7 +169,6 @@ def folder_exist(path):
 		return False
 
 def create_folder(path):
-	#print("Folder created in : ", self.dirPath + "/" + folderName)
 	if not folder_exist(path): 
 		try:
 			os.mkdir(path)
