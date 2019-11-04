@@ -222,7 +222,7 @@ class ConnectionManager():
 			server_req = requests.get(url, headers=(PROTON_HEADERS))
 			original_req = server_req.text
 			start_index = original_req.find("auth-user-pass")
-			modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + OVPN_FILE.split("/")[-1] + original_req[start_index+14:]
+			modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + USER_CRED_FILE.split("/")[-1] + original_req[start_index+14:]
 			try:
 				#append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
 				append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split("/")[-1].split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
