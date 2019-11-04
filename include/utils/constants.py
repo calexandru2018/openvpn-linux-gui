@@ -4,6 +4,7 @@ HOME = os.environ["HOME"]
 USER = os.environ["USERNAME"]
 PROJECT_NAME = "openvpn-linux-gui"
 PROJ_PATH = os.path.join(os.path.expanduser(f"~{USER}"), f"{PROJECT_NAME}")
+LOG_FILE = os.path.join(PROJ_PATH, "logfile.log")
 
 USER_FOLDER = os.path.join(PROJ_PATH, "user_conf")
 USER_CRED_FILE = os.path.join(USER_FOLDER, ".user_credentials")
