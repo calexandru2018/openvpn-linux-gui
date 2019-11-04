@@ -36,39 +36,40 @@ class AppEntry():
 				self.connMan.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				#self.connMan.enable_vpn_on_boot()
 				self.connMan.openvpn_service_manager("enable")
 				continue
 			elif(self.choice == 9):
-				#self.connMan.enable_vpn_on_boot()
 				self.connMan.openvpn_service_manager("disable")
 				continue
 			elif(self.choice == 10):
-				self.connMan.modify_dns()
+				print("Start/stop on boot service")
 				continue
 			elif(self.choice == 11):
-				self.connMan.modify_dns(restore_original_dns=True)
-				continue
-			elif(self.choice == 12):
-				#self.connMan.restart_on_boot_service()
 				self.connMan.openvpn_service_manager("restart")
 				continue
+			elif(self.choice == 12):
+				choice = input("[C]ustom or [R]estore ? : ")
+				restore_original_dns = False
+
+				if choice[0].lower() == "r":
+					restore_original_dns = True 
+
+				self.connMan.modify_dns(restore_original_dns=restore_original_dns)
+				continue
 			elif(self.choice == 13):
-				#self.connMan.restart_on_boot_service()
 				self.connMan.restart_network_manager()
 				continue
 			elif(self.choice == 14):
-				#self.connMan.restart_on_boot_service()
-				choice = input("Disable IPV6 ? :")
-				_choice_ = False
+				choice = input("Disable IPV6 ? : ")
+				disable_ipv6 = False
+
 				if choice[0].lower() == "y":
-					_choice_ = True
-				elif choice[0].lower() == "n":
-					_choice_ == False 
-				self.connMan.manage_ipv6(disable_ipv6=_choice_)
+					disable_ipv6 = True
+
+				self.connMan.manage_ipv6(disable_ipv6=disable_ipv6)
 				continue
 			elif(self.choice == 15):
-				print("None")
+				print("Test things")
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -92,9 +93,9 @@ class AppEntry():
 
 	[1] - Check Requirments\t\t [8] - Enable "start on boot" service
 	[2] - Create user\t\t [9] - Disable "start on boot" service
-	[3] - Edit User\t\t\t [10] - Modify DNS (OVPN should fix it automatically)
-	[4] - Cache Servers\t\t [11] - Restore original DNS
-	[5] - Generate OPVN file\t [12] - Restart "start on boot" service
+	[3] - Edit User\t\t\t [10] - Start/Stop "start on boot" service
+	[4] - Cache Servers\t\t [11] - Restart "start on boot" service
+	[5] - Generate OPVN file\t [12] - Manage DNS
 	[6] - OpenVPN Connect\t\t [13] - Restart NetworkManager
 	[7] - OpenVPN Disconnect\t [14] - Manage IPV6
 
@@ -109,7 +110,8 @@ class AppEntry():
 	[22] - Connect to Secure Core\t\t
 
 
-	[0] - Exit""")
+	[0] - Exit
+	""")
 		print("--------------------------------------------------------------------------------------")
 
 if __name__ == '__main__':
