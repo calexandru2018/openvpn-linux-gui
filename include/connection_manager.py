@@ -12,6 +12,8 @@ from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
 	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
 )
+
+from include.logger import log
 class ConnectionManager():
 	def __init__(self):
 		self.server_manager = ServerManager()
@@ -279,8 +281,12 @@ class ConnectionManager():
 					file.write(interface_to_save + " " + ipv6 + netmask)
 					if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 						print("IPV6 disabled.")
+						log.info("IPV6 was disabled")
 						return True
+					else:
+						log.critical("Unable to run CMD commands and disable IPV6")
 			else:
+				log.critical("Could not find IPV6 and netmask.")
 				return False
 
 	def restart_network_manager(self):

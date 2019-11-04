@@ -61,9 +61,11 @@ def create_file(path, content):
 			newFile = open(path, "w+")
 			newFile.write(content)
 		except:
+			log.warning(f"Unable to create \"{path}\".")
 			return False
 		else:
 			newFile.close()
+			log.info(f"\"{path}\" was created and succesfully written to.")
 			return True
 	else:
 		return False
@@ -93,10 +95,10 @@ def edit_file(path, content, append=True):
 		existingFile = open(path, write_to)
 		existingFile.write(content)
 	except:
-		log.warning(f"Unable to \"{write_to}\" content on: {path}")
+		log.warning(f"Unable to edit content with \"{write_to}\" on: {path}")
 		return False
 	else:
-		log.info(f"Content was \"{write_to}\" on: \"{path}\"")
+		log.info(f"Content was edited with \"{write_to}\" on: \"{path}\"")
 		existingFile.close()
 		return True
 
@@ -122,16 +124,20 @@ def read_file(path, second_arg=False):
 			file = open(path, "r")
 			return file.read()
 		except:
+			log.warning(f"Unable to read content was from: \"{path}\" WITHOUT second argument")
 			return False
 		else:
+			log.info(f"Content was read succesfully from: \"{path}\" WITHOUT second argument")
 			file.close()
 	else:
 		try:
 			file = open(path+"/"+second_arg, "r")
 			return file.read()
 		except:
+			log.warning(f"Unable to read content was from: \"{path}\" WITHOUT second argument")
 			return False
 		else:
+			log.info(f"Content was read succesfully from: \"{path}\" WITH second argument")
 			file.close()
 
 def delete_file(path):
@@ -164,28 +170,36 @@ import os, shutil
 
 def folder_exist(path):
 	if(os.path.isdir(path)):
+		log.info(f"Folder \"{path}\" DOES exist.")
 		return True
 	else:
+		log.info(f"Folder \"{path}\" DOES NOT exist.")
 		return False
 
 def create_folder(path):
 	if not folder_exist(path): 
 		try:
 			os.mkdir(path)
+			log.info(f"Folder \"{path}\" was created.")
 			return True
 		except:
+			log.critical(f"Unable to create folder: \"{path}\".")
 			return False
 	else:
+		log.info(f"Folder \"{path}\" already exists.")
 		return False
 
 def delete_folder_recursive(path):
 	if folder_exist(path): 
 		try:
 			shutil.rmtree(path)
+			log.info(f"Folder \"{path}\" was recursively deleted.")
 			return True
 		except:
+			log.critical(f"Could not recursively delete folder: \"{path}\".")
 			return False
 	else:
+		log.warning(f"Could not recursively delete folder: \"{path}\" since it does not exist.")
 		return False
 
 def auto_select_optimal_server(data, tier):
@@ -203,6 +217,7 @@ def auto_select_optimal_server(data, tier):
 			connection_ID = data['serverList'][server]['id']
 			best_score = data['serverList'][server]['score']
 	connectInfo = (connection_ID, best_score, server_name)
+	log.debug(f"Connection information {connectInfo}")
 	return connectInfo
 
 def to_ascii(byteValue):
@@ -221,8 +236,12 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 			else:
 				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-			return to_ascii(output.stdout).strip()
+			ret_out = to_ascii(output.stdout).strip()
+			log.debug(f"CMD output: {ret_out}")
+			return ret_out
 		except:
+			log.warning(f"Unable to run command with following args: {args}")
+			log.debug(f"Output: {output}")
 			return False
 
 # check for ip: get_ip()
