@@ -321,3 +321,26 @@ class ConnectionManager():
 		except:
 				print("Unable to copy credentials")
 				return False
+
+	def is_vpn_running(self):
+		getPID = False
+		is_connected = False
+		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
+		try:
+			for command in command_list:
+				getPID = cmd_command(command)
+				if getPID:
+					break
+		except:
+			# print("cant find running openvpn process")
+			return False
+
+		# resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
+		
+		cmd = "cat /etc/resolv.conf"
+		res = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+		if getPID and res.returncode == 0:
+			print(f"VPN is running\nOVPN PID:{getPID}\nDNF conf:\n{res.stdout.decode('ascii')}")
+		else:
+			print("VPN is not running.")

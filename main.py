@@ -71,6 +71,9 @@ class AppEntry():
 			elif(self.choice == 15):
 				print("Test things")
 				continue
+			elif(self.choice == 23):
+				self.connMan.is_vpn_running()
+				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
 				break
@@ -100,7 +103,7 @@ class AppEntry():
 	[7] - OpenVPN Disconnect\t [14] - Manage IPV6
 
 
-	[15] - End active VPN sessions\t\t 
+	[15] - End active VPN sessions\t\t [23] - Is VPN Running
 	[16] - Check DNS\t\t
 	[17] - Quick Connect\t\t
 	[18] - Connect to last selected\t\t
