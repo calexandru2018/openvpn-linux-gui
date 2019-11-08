@@ -340,7 +340,9 @@ class ConnectionManager():
 		cmd = "cat /etc/resolv.conf"
 		res = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-		if getPID and (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()) :
+		if getPID and (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
 			print(f"VPN is running\nOVPN PID:{getPID}\nDNF conf:\n{res.stdout.decode('ascii')}")
+		elif getPID and not (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
+			print("VPN is running, but there might be DNS leaks. Try modifying your DNS configurations.")
 		else:
 			print("VPN is not running.")
