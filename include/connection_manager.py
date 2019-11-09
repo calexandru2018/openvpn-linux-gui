@@ -28,16 +28,14 @@ class ConnectionManager():
 			print("Modifying dns...")
 			#resolv_conf_backup = self.rootDir + "/" + USER_FOLDER + "/" + RESOLV_BACKUP_FILE
 			if not restore_original_dns:
-				log.info("#############################")
-				log.info("Apply custom ProtonVPN DNS")
-				log.info("#############################")
+				log.info("Applying custom ProtonVPN DNS...")
 				#if shutil.copy(resolv_conf_path, resolv_conf_backup):
 				if shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE):
 					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 					try:
 						subprocess.run(["sudo", "bash", "-c", cmd])
 						print("DNS updated with new configurations.")
-						log.info("Custom ProtonVPN DNS applied.")
+						log.info("...custom ProtonVPN DNS applied.")
 						return True
 					except:
 						print("Unable to update DNS configurations")
@@ -48,23 +46,23 @@ class ConnectionManager():
 					log.warning("Unable to backup DNS configurations.")
 					return False
 			else:
-				log.info("#############################")
-				log.info("Restor original DNS process")
-				log.info("#############################")
+				log.info("Restoring original DNS process")
 				try:
 					#with open(resolv_conf_backup) as f:
 					with open(RESOLV_BACKUP_FILE) as f:
 						content = f.read()
-						cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
-						subprocess.run(["sudo", "bash", "-c", cmd])
-						print("Restored to original DNS configurations.")
-						delete_file(RESOLV_BACKUP_FILE)
-						log.info(f"Original configurations restored: \"{RESOLV_BACKUP_FILE}\"")
-						return True
+					cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
+					subprocess.run(["sudo", "bash", "-c", cmd])
+					print("..nDNS configurations were restored.")
+					delete_file(RESOLV_BACKUP_FILE)
+					log.info(f"Original configurations restored: \"{RESOLV_BACKUP_FILE}\"")
+					return True
 				except:
 					print("Unable to restore original DNS configurations, try restarting the Network Manager.")
+					log.warning("Unable to restore original DNS configurations.")
 		else:
 			print("The \"resolv.conf\" file was not found on your system.")
+			log.warning("\"resolv.conf\" file was not found.")
 			return False
 		
 	# Optimize when disconnecting, check for openvpn pid
