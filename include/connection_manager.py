@@ -14,6 +14,7 @@ from include.utils.constants import (
 )
 
 from include.logger import log
+
 class ConnectionManager():
 	def __init__(self):
 		self.server_manager = ServerManager()
@@ -22,25 +23,34 @@ class ConnectionManager():
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
 		resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
-		
+		log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
 		if(resolv_conf_path):
 			print("Modifying dns...")
 			#resolv_conf_backup = self.rootDir + "/" + USER_FOLDER + "/" + RESOLV_BACKUP_FILE
 			if not restore_original_dns:
+				log.info("#############################")
+				log.info("Apply custom ProtonVPN DNS")
+				log.info("#############################")
 				#if shutil.copy(resolv_conf_path, resolv_conf_backup):
 				if shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE):
 					cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 					try:
 						subprocess.run(["sudo", "bash", "-c", cmd])
 						print("DNS updated with new configurations.")
+						log.info("Custom ProtonVPN DNS applied.")
 						return True
 					except:
-						print("unable to update DNS configurations")
+						print("Unable to update DNS configurations")
+						log.warning("Unable to apply custom ProtonVPN DNS configurations.")
 						return False
 				else:
 					print("Unable to back DNS configurations.")
+					log.warning("Unable to backup DNS configurations.")
 					return False
 			else:
+				log.info("#############################")
+				log.info("Restor original DNS process")
+				log.info("#############################")
 				try:
 					#with open(resolv_conf_backup) as f:
 					with open(RESOLV_BACKUP_FILE) as f:
@@ -49,6 +59,7 @@ class ConnectionManager():
 						subprocess.run(["sudo", "bash", "-c", cmd])
 						print("Restored to original DNS configurations.")
 						delete_file(RESOLV_BACKUP_FILE)
+						log.info(f"Original configurations restored: \"{RESOLV_BACKUP_FILE}\"")
 						return True
 				except:
 					print("Unable to restore original DNS configurations, try restarting the Network Manager.")
@@ -88,6 +99,8 @@ class ConnectionManager():
 		except:
 			is_connected = False
 
+		log.info(f"Tested for internet connection: \"{is_connected}\"")
+
 		if is_connected:
 			if self.modify_dns() and self.manage_ipv6(disable_ipv6=True):
 				var = subprocess.Popen(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -95,6 +108,7 @@ class ConnectionManager():
 				self.ip_swap("connect", is_connected)
 		else:
 			print("There is no internet connection.")
+			log.warning("Unable to connect, check your internet connection.")
 
 	# disconnect from open_vpn: openvpn_disconnect()
 	def openvpn_disconnect(self):
@@ -111,11 +125,14 @@ class ConnectionManager():
 			return False	
 		
 		print("Disconnecting from vpn server...")
+		log.info(f"PID is: {'NONE' if not getPID else getPID}")
 		if getPID:
 			try:
 				is_connected = get_ip()
 			except:
 				is_connected = False
+			
+			log.info(f"Tested for internet connection: \"{is_connected}\"")
 			if self.modify_dns(restore_original_dns=True):
 				self.manage_ipv6(disable_ipv6=False)
 				var = subprocess.Popen(["sudo","kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -124,6 +141,7 @@ class ConnectionManager():
 				self.ip_swap("disconnect", is_connected)
 		else:
 			print("Unable to disconnect, no OpenVPN process was found.")
+			log.warning("Could not find any OpenVPN processes.")
 			return False
 
 	def generate_ovpn_file(self):
@@ -152,13 +170,15 @@ class ConnectionManager():
 		try:
 			data = json.loads(read_file(CACHE_FOLDER, file))
 		except TypeError:
-			print("Servers are not cached.") 
+			print("Servers are not cached.")
+			log.warning("Servers are not cached.") 
 			return False
 
 		try:
 			user_pref = json.loads(self.user_manager.read_user_data())
 		except TypeError:
 			print("Profile was not initialized.")
+			log.warning("User profile was not initialized.")
 			return False
 
 		connectInfo = auto_select_optimal_server(data, user_pref['tier'])
@@ -171,12 +191,12 @@ class ConnectionManager():
 
 		serverReq = requests.get(url, headers=(PROTON_HEADERS))
 
-
 		if walk_to_file(USER_FOLDER, OVPN_FILE.split("/")[-1]):
 			delete_file(OVPN_FILE)
 		if create_file(OVPN_FILE, serverReq.text):
 			print("An ovpn file has bee created, try to establish a connection now.")
 			edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False)
+			log.info(f"Updated user last connection data: \"{user_pref}\"")
 			return True
 
 	def openvpn_service_manager(self, action):
@@ -200,13 +220,16 @@ class ConnectionManager():
 		#print("systemctl", action, ON_BOOT_PROCESS_NAME)
 		if action == "enable" and not servers_are_cached: 
 			print("Unable to create service, servers were not cached.")
+			log.debug("Unable to create service, servers were not cached.")
 			return False
 		try:
-			subprocess.run(["sudo", "systemctl", action, ON_BOOT_PROCESS_NAME])
+			output = subprocess.run(["sudo", "systemctl", action, ON_BOOT_PROCESS_NAME], stdout=subprocess.PIPE)
 			delete_folder_recursive(CACHE_FOLDER)
 			print("\n"+success_msg+"\n")
+			log.info(f"Start on boot created: \"{output.stdout.decode()}\"")
 		except:
 			print("\n"+fail_msg+"\n")
+			log.critical("Something went wrong, could not enable \"start on boot\"")
 
 	def generate_ovpn_for_boot(self):
 		country = input("Which country to connect to: ")
@@ -214,6 +237,7 @@ class ConnectionManager():
 		file = country.upper() + SERVER_FILE_TYPE
 
 		if walk_to_file(CACHE_FOLDER, file):
+			ovpn_file_created = False
 			with open(os.path.join(CACHE_FOLDER, file)) as file:
 				data = json.load(file)
 
@@ -230,16 +254,23 @@ class ConnectionManager():
 				append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split("/")[-1].split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
 				subprocess.run(["sudo", "bash", "-c", append_to_file])
 				print("Created new file in /openvpn/client/")
+				log.info(f"\"start on boot\"OpenVPN file modified.")
+				ovpn_file_created = True
 			except:
 				print("Unable to create configuration file in /openvpn/client/")
+				log.critical(f"Could not generate/modify openVPN file.")
 
-			if(not walk_to_file("/opt/", USER_CRED_FILE, in_dirs=True)):
+			if ovpn_file_created and (not walk_to_file("/opt/", USER_CRED_FILE, in_dirs=True)):
 				self.copy_credentials()
+				filename = OVPN_FILE.split("/")[-1].split(".")[0]
+				log.info(f"OVPN file for boot was generated: \"/etc/openvpn/client/{filename}\"")
 				return True
 			else:
+				log.critical(f"OVPN file for boot was NOT generated: \"/etc/openvpn/client/{filename}\"")
 				return False
 		else:
 			print("There is no such file, maybe servers are not cached ?")
+			log.warning("File not found, maybe not cached.")
 			return False
 
 	# manage IPV6: manage_ipv6()
@@ -250,6 +281,9 @@ class ConnectionManager():
 		ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"]
 
 		if not disable_ipv6:
+			log.info("#############################")
+			log.info("Start IPV6 restore process.")
+			log.info("#############################")
 			with open(IPV6_BACKUP_FILE, "r") as file:
 				content = file.read().split()
 			ipv6_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
@@ -258,10 +292,16 @@ class ConnectionManager():
 				cmd_command(["ip", "addr", "add", content[1] , "dev", content[0]],  as_sudo=True)
 				print("IPV6 Restored and linklocal restored.")
 				delete_file(IPV6_BACKUP_FILE)
+				log.info("...IPV6 restoration sucessful and backup file was deleted.")
 				return True
-			print("Did not manage to restore IPV6, needs to be restored manually.")
-			return False
+			else:
+				print("Did not manage to restore IPV6, needs to be restored manually.")
+				log.warning("Could not restore IPV6.")
+				return False
 		else:
+			log.info("#############################")
+			log.info("Starte IPV6 disable process.")
+			log.info("#############################")
 			interfaces = netifaces.interfaces()
 			for interface in interfaces:
 				confs = netifaces.ifaddresses(interface)
@@ -273,28 +313,31 @@ class ConnectionManager():
 							interface_to_save = interface
 							netmask = address['netmask'].split("::")[1]
 							ipv6 = ipv6.group(0)
+							log.info(f"IPV6 found: \"{ipv6}\"")
 							break
 			if ipv6 and netmask:
 				if walk_to_file(USER_FOLDER, IPV6_BACKUP_FILE.split("/")[-1]):	
 					delete_file(IPV6_BACKUP_FILE)
+					log.info(f"Backup file was deleted: \"{IPV6_BACKUP_FILE}\"")
 				with open(IPV6_BACKUP_FILE, "w") as file:
 					file.write(interface_to_save + " " + ipv6 + netmask)
 					if cmd_command(ipv6_default, as_sudo=True) and cmd_command(ipv6_all, as_sudo=True):
 						print("IPV6 disabled.")
-						log.info("IPV6 was disabled")
+						log.info("...IPV6 disable succeded.")
 						return True
 					else:
-						log.critical("Unable to run CMD commands and disable IPV6")
+						log.critical("Unable to run CMD commands to disable IPV6.")
 			else:
 				log.critical("Could not find IPV6 and netmask.")
 				return False
 
 	def restart_network_manager(self):
-		print("systemctl restart", "NetworkManager")
 		try:
-			subprocess.run(["systemctl", "restart", "NetworkManager"])
+			output = subprocess.run(["systemctl", "restart", "NetworkManager"], stdout=subprocess.PIPE)
 			print("\nRestarted network manager\n")
+			log.info(f"Sucessfully restarted Network Manager: \"{output.stdout.decode()}\"")
 		except:
+			log.warning(f"Unable to restart Network Manager.")
 			print("Cant restart network manager")
 
 	def cache_servers(self):
@@ -316,33 +359,37 @@ class ConnectionManager():
 					subprocess.run(["sudo", "bash", "-c", cmd])
 			else:
 				subprocess.run(["sudo", "bash", "-c", cmds[1]])
+
 			print("Copied credentials")
+			log.info(f"Credentials were copied to: \"/opt/{PROJECT_NAME}\"")
 			return True
 		except:
-				print("Unable to copy credentials")
-				return False
+			print("Unable to copy credentials")
+			log.critical(f"Unable to copye credentials to: \"/opt/{PROJECT_NAME}\"")
+			return False
 
 	def is_vpn_running(self):
-		getPID = False
-		is_connected = False
+		open_vpn_PID = False
 		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
 		try:
 			for command in command_list:
-				getPID = cmd_command(command)
-				if getPID:
+				open_vpn_PID = cmd_command(command)
+				if open_vpn_PID:
 					break
 		except:
-			# print("cant find running openvpn process")
 			return False
 
-		# resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
-		
 		cmd = "cat /etc/resolv.conf"
 		res = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-		if getPID and (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
-			print(f"VPN is running\nOVPN PID:{getPID}\nDNF conf:\n{res.stdout.decode('ascii')}")
-		elif getPID and not (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
+		log.info(f"PID is: {'NONE' if not open_vpn_PID else open_vpn_PID}")
+
+		if open_vpn_PID and (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
+			print("VPN is running")
+			log.info(f"VPN is running\nOVPN PID:{open_vpn_PID}\nDNF conf:\n{res.stdout.decode()}")
+		elif open_vpn_PID and not (res.returncode == 0 and "10.8.8.1" in res.stdout.decode()):
 			print("VPN is running, but there might be DNS leaks. Try modifying your DNS configurations.")
+			log.warning(f"Resolv conf has original values, custom ProtonVPN DNS configuration not found: {res.stdout.decode()}")
 		else:
 			print("VPN is not running.")
+			log.info("Could not find any OpenVPN processes.")
