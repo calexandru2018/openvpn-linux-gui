@@ -17,23 +17,23 @@ def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	for root, dirs, files in os.walk(path):
 		if not in_dirs:
 			if file in files:
-				log.info(f"\"{file}\" was found in \"{root}\" was found.")
+				log.info(f"\"{file}\" was found in \"{root}\".")
 				if not is_return_bool:
 					return os.path.join(root, file)
 				else:
 					return True
 			else:
-				log.warning(f"\"{file}\" was NOT found in \"{root}\" was found.")
+				log.warning(f"\"{file}\" was NOT found in \"{root}\".")
 				return False
 		else:
 			if file in dirs:
-				log.info(f"\"{file}\" was found in \"{root}\" was found.")
+				log.info(f"\"{file}\" was found in \"{root}\".")
 				if not is_return_bool:
 					return os.path.join(root, file)
 				else:
 					return True
 			else:
-				log.warning(f"\"{file}\" was NOT found in \"{root}\" was found.")
+				log.warning(f"\"{file}\" was NOT found in \"{root}\".")
 				return False
 
 def create_file(path, content):
@@ -55,20 +55,20 @@ def create_file(path, content):
 	bool:
 		Returns True if file is created, False otherwise.
 	'''
-
-	if not folder_exist(path): 
-		try:
-			newFile = open(path, "w+")
-			newFile.write(content)
-		except:
-			log.warning(f"Unable to create \"{path}\".")
-			return False
-		else:
-			newFile.close()
-			log.info(f"\"{path}\" was created and succesfully written to.")
-			return True
-	else:
+	# path_to_dir = "/".join(path.split("/")[:-1])
+	# if not folder_exist(path_to_dir): 
+	try:
+		newFile = open(path, "w+")
+		newFile.write(content)
+	except:
+		log.warning(f"Unable to create \"{path}\".")
 		return False
+	else:
+		newFile.close()
+		log.info(f"\"{path}\" was created and succesfully written to.")
+		return True
+	# else:
+	# 	return False
 
 def edit_file(path, content, append=True):
 	'''Edits the specified file, first checking if it exists.
