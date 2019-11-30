@@ -35,10 +35,7 @@ def check_if_profile_initialized(requirments_check=False):
 		3 - Returns False if it was unable to configure/initialize a new user. 
 	'''
 	user_manager = UserManager()
-	if user_manager.check_if_user_exist():
-		#print("User exists")
-		return True
-	else:
+	if not user_manager.check_if_user_exist():
 		# if(requirments_check == False):
 		# 	userChoice = input("User was not created, would you like to create it now ? [y/n]: ")
 		# 	if(userChoice[0].lower() == 'y'):
@@ -50,6 +47,8 @@ def check_if_profile_initialized(requirments_check=False):
 		# else:
 		# 	return False
 		return False
+	#print("User exists")
+	return True
 
 # check if there is internet connection: is_internet_working_normally()
 def is_internet_working_normally():
@@ -60,9 +59,9 @@ def is_internet_working_normally():
 	Bool:
 		True if ther is internet connection, False otherwise.
 	'''
-	if get_ip():
-		return True
-	return False
+	if not get_ip():
+		return False
+	return True
 
 # check if openVpn is installed is_openvpn_installed()
 def is_openvpn_installed():
@@ -73,11 +72,11 @@ def is_openvpn_installed():
 	Bool:
 		Returns True if OpenVPN is found installed, False otherwise.
 	'''
-	decodedString = cmd_command(["which", "openvpn"])
-	if decodedString:
-		#print("Is OpenVPN installed: ", decodedString)
-		return True
-	return False
+	openvpn_installed = cmd_command(["which", "openvpn"])
+	if not openvpn_installed:
+		return False
+	#print("Is OpenVPN installed: ", openvpn_installed)
+	return True
 
 def check_if_openvpn_is_currently_running():
 	'''Checks if OpenVPN is running.
@@ -89,15 +88,15 @@ def check_if_openvpn_is_currently_running():
 	'''
 	open_vpn_process = cmd_command(["pgrep", "openvpn"])
 	#print("Is OpenVPN running: ", open_vpn_process)
-	if open_vpn_process:
-		return True
-	return False
+	if not open_vpn_process:
+		return False
+	return True
 
 def check_python_version():
 	pythonVersion = cmd_command(["python", "--version"])
-	if pythonVersion and pythonVersion.split(' ')[1] > '3.3':
-		return True
-	return False
+	if not pythonVersion and not pythonVersion.split(' ')[1] > '3.3':
+		return False
+	return True
 
 # check if openresolv is installed: is_open_resolv_installed()
 def is_open_resolv_installed(path, fileName):
