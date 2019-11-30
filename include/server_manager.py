@@ -84,11 +84,11 @@ class ServerManager():
 		if not folder_exist(CACHE_FOLDER):
 			create_folder(CACHE_FOLDER)
 		else:
-			if delete_folder_recursive(CACHE_FOLDER):
-				create_folder(CACHE_FOLDER)
-			else:
+			if not delete_folder_recursive(CACHE_FOLDER):
 				print("Unable to delete folder ", CACHE_FOLDER)
 				return False
+				
+			create_folder(CACHE_FOLDER)
 
 		for country, content in self.serverList.items():
 			country_path = os.path.join(CACHE_FOLDER, country+SERVER_FILE_TYPE)
