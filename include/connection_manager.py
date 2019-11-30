@@ -5,7 +5,7 @@ from include.server_manager import ServerManager
 
 # Helper methods and constants 
 from include.utils.methods import (
-	walk_to_file, create_file, read_file, delete_file, delete_folder_recursive,
+	walk_to_file, create_file, delete_file, delete_folder_recursive,
 	cmd_command, auto_select_optimal_server, get_ip, edit_file
 )
 from include.utils.constants import (
@@ -413,8 +413,8 @@ class ConnectionManager():
 		self.server_manager.collectServerList()
 
 	def initialize_user_profile(self):
-		self.user_manager.create_user_credentials()
-		self.user_manager.create_server_conf()
+		self.user_manager.create_user_credentials_file()
+		self.user_manager.create_user_pref_file()
 	
 	def edit_user_profile(self):
 		if self.user_manager.ask_what_to_edit():
