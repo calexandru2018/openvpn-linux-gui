@@ -195,7 +195,7 @@ class ConnectionManager():
 
 		try:
 			user_pref = json.loads(self.user_manager.read_user_data())
-		except TypeError:
+		except:
 			print("Profile was not initialized.")
 			log.warning("User profile was not initialized.")
 			return False

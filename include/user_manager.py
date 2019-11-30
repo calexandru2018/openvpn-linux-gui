@@ -120,12 +120,19 @@ class UserManager():
 		if is_user_credentials:
 			file_name = USER_CRED_FILE.split("/")[-1] 
 
-		user_data = walk_to_file(USER_FOLDER, file_name)
+		#print(f"getting from this path ____ {USER_FOLDER}/{file_name}")
+		user_data_path = walk_to_file(USER_FOLDER, file_name, is_return_bool=False)
 
-		if not walk_to_file(USER_FOLDER, file_name):
+		if not user_data_path:
+			print("Inside false")
 			return False
 			
-		return user_data
+		try:
+			with open(user_data_path, "r") as file:
+				return file.read()
+		except:
+			print("Unable to read file")
+			return False
 
 	# Check if user exists (both files should be True to return True)
 	def check_if_user_exist(self):
