@@ -94,13 +94,13 @@ def edit_file(path, content, append=True):
 	try:
 		existingFile = open(path, write_to)
 		existingFile.write(content)
+		existingFile.close()
+		log.info(f"Content was edited with \"{write_to}\" on: \"{path}\"")
+		return True
 	except:
 		log.warning(f"Unable to edit content with \"{write_to}\" on: {path}")
 		return False
-	else:
-		log.info(f"Content was edited with \"{write_to}\" on: \"{path}\"")
-		existingFile.close()
-		return True
+		
 
 def read_file(path, second_arg=False):
 	'''Reads the specified file.
@@ -216,7 +216,8 @@ def auto_select_optimal_server(data, tier):
 			server_name = data['serverList'][server]['name']
 			connection_ID = data['serverList'][server]['id']
 			best_score = data['serverList'][server]['score']
-	connectInfo = (connection_ID, best_score, server_name)
+			server_load = data['serverList'][server]['load']
+	connectInfo = (connection_ID, best_score, server_name, server_load)
 	log.debug(f"Connection information {connectInfo}")
 	return connectInfo
 
