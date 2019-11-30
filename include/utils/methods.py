@@ -16,25 +16,26 @@ def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 	"""
 	for root, dirs, files in os.walk(path):
 		if not in_dirs:
-			if file in files:
-				log.info(f"\"{file}\" was found in \"{root}\".")
-				if not is_return_bool:
-					return os.path.join(root, file)
-				else:
-					return True
-			else:
+			if not file in files:
 				log.warning(f"\"{file}\" was NOT found in \"{root}\".")
 				return False
+
+			log.info(f"\"{file}\" was found in \"{root}\".")
+
+			if is_return_bool:
+				return True
+
+			return os.path.join(root, file)
 		else:
-			if file in dirs:
-				log.info(f"\"{file}\" was found in \"{root}\".")
-				if not is_return_bool:
-					return os.path.join(root, file)
-				else:
-					return True
-			else:
+			if not file in dirs:
 				log.warning(f"\"{file}\" was NOT found in \"{root}\".")
 				return False
+			
+			log.info(f"\"{file}\" was found in \"{root}\".")
+			
+			if is_return_bool:
+				return True
+			return os.path.join(root, file)
 
 def create_file(path, content):
 	'''Creates the file and writes content to it.
@@ -55,20 +56,15 @@ def create_file(path, content):
 	bool:
 		Returns True if file is created, False otherwise.
 	'''
-	# path_to_dir = "/".join(path.split("/")[:-1])
-	# if not folder_exist(path_to_dir): 
 	try:
 		newFile = open(path, "w+")
 		newFile.write(content)
-	except:
-		log.warning(f"Unable to create \"{path}\".")
-		return False
-	else:
 		newFile.close()
 		log.info(f"\"{path}\" was created and succesfully written to.")
 		return True
-	# else:
-	# 	return False
+	except:
+		log.warning(f"Unable to create \"{path}\".")
+		return False
 
 def edit_file(path, content, append=True):
 	'''Edits the specified file, first checking if it exists.
@@ -100,45 +96,6 @@ def edit_file(path, content, append=True):
 	except:
 		log.warning(f"Unable to edit content with \"{write_to}\" on: {path}")
 		return False
-		
-
-def read_file(path, second_arg=False):
-	'''Reads the specified file.
-	
-	Parameters:
-	----------
-	`folderName` : string
-		The name of the folder.
-	`fileName` : string
-		The name of the file.
-	`fileType` : string
-		The type/extension - json or txt.
-	
-	Returns:
-	-------
-	bool(uknown ?):
-		Returns the content if file exists and can be read from, False otherwise.
-	'''
-	if not second_arg:
-		try:
-			file = open(path, "r")
-			return file.read()
-		except:
-			log.warning(f"Unable to read content was from: \"{path}\" WITHOUT second argument")
-			return False
-		else:
-			log.info(f"Content was read succesfully from: \"{path}\" WITHOUT second argument")
-			file.close()
-	else:
-		try:
-			file = open(path+"/"+second_arg, "r")
-			return file.read()
-		except:
-			log.warning(f"Unable to read content was from: \"{path}\" WITHOUT second argument")
-			return False
-		else:
-			log.info(f"Content was read succesfully from: \"{path}\" WITH second argument")
-			file.close()
 
 def delete_file(path):
 	'''Deletes the specified file.
@@ -166,40 +123,36 @@ def delete_file(path):
 		log.warning(f"Unable to remove \"{filename}\".")
 		return False
 
-import os, shutil
-
 def folder_exist(path):
-	if(os.path.isdir(path)):
-		log.info(f"Folder \"{path}\" DOES exist.")
-		return True
-	else:
+	if not os.path.isdir(path):
 		log.info(f"Folder \"{path}\" DOES NOT exist.")
 		return False
+	log.info(f"Folder \"{path}\" DOES exist.")
+	return True
 
 def create_folder(path):
-	if not folder_exist(path): 
-		try:
-			os.mkdir(path)
-			log.info(f"Folder \"{path}\" was created.")
-			return True
-		except:
-			log.critical(f"Unable to create folder: \"{path}\".")
-			return False
-	else:
+	if folder_exist(path): 
 		log.info(f"Folder \"{path}\" already exists.")
+		return False
+	try:
+		os.mkdir(path)
+		log.info(f"Folder \"{path}\" was created.")
+		return True
+	except:
+		log.critical(f"Unable to create folder: \"{path}\".")
 		return False
 
 def delete_folder_recursive(path):
-	if folder_exist(path): 
-		try:
-			shutil.rmtree(path)
-			log.info(f"Folder \"{path}\" was recursively deleted.")
-			return True
-		except:
-			log.critical(f"Could not recursively delete folder: \"{path}\".")
-			return False
-	else:
+	if not folder_exist(path): 
 		log.warning(f"Could not recursively delete folder: \"{path}\" since it does not exist.")
+		return False
+
+	try:
+		shutil.rmtree(path)
+		log.info(f"Folder \"{path}\" was recursively deleted.")
+		return True
+	except:
+		log.critical(f"Could not recursively delete folder: \"{path}\".")
 		return False
 
 def auto_select_optimal_server(data, tier):
@@ -217,14 +170,15 @@ def auto_select_optimal_server(data, tier):
 			connection_ID = data['serverList'][server]['id']
 			best_score = data['serverList'][server]['score']
 			server_load = data['serverList'][server]['load']
+
 	connectInfo = (connection_ID, best_score, server_name, server_load)
 	log.debug(f"Connection information {connectInfo}")
 	return connectInfo
 
 def to_ascii(byteValue):
-	if byteValue:
-		return byteValue.decode('ascii')
-	return False
+	if not byteValue:
+		return False
+	return byteValue.decode('ascii')
 
 def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
@@ -259,7 +213,7 @@ def get_ip():
 
 	protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
 
-	if dyndnsIp == protonRequest['IP']:
-		#print("Internet is OK and your IP is:", dyndnsIp)
-		return protonRequest['IP']
-	return False
+	if not dyndnsIp == protonRequest['IP']:
+		return False
+	#print("Internet is OK and your IP is:", dyndnsIp)
+	return protonRequest['IP']
