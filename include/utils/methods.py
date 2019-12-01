@@ -170,7 +170,7 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 			decoded_output = raw_output.stdout.decode('ascii').strip()
-			log.debug(f"CMD output: {decoded_output}")
+			log.debug(f"Sucessful CMD output: {decoded_output}")
 			return decoded_output
 		except:
 			log.warning(f"Unable to run command with following args: {args}")
@@ -186,12 +186,11 @@ def get_ip():
 	Bool:
 		True if the IP's match, False otherwise.
 	'''
-	dyndnsRequest = requests.get(DYNDNS_CHECK_URL)
-	dyndnsIp = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", dyndnsRequest.text)[0].strip()
+	protonRequest = False
 
 	protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
 
-	if not dyndnsIp == protonRequest['IP']:
+	if not protonRequest:
 		return False
 	#print("Internet is OK and your IP is:", dyndnsIp)
 	return protonRequest['IP']
