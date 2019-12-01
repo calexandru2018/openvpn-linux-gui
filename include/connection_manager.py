@@ -97,10 +97,10 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
-		processID = self.check_for_running_ovpn_process()
+		openvpn_PID = self.check_for_running_ovpn_process()
 		is_connected = False
 
-		if processID:
+		if openvpn_PID:
 			print("Unable to connect, a OpenVPN process is already running.")
 			log.info("Unable to connect, a OpenVPN process is already running.")
 			return False
@@ -118,11 +118,9 @@ class ConnectionManager():
 			log.warning("Unable to connect, check your internet connection.")
 		
 		if not self.modify_dns():
-			log.warning("Unable change to DNS during prior to connecting to VPN.")
 			return False
 		
 		if not self.manage_ipv6(disable_ipv6=True):
-			log.warning("Unable change to disable IPV6 prior to connecting to VPN.")
 			return False
 
 		var = subprocess.run(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -137,13 +135,13 @@ class ConnectionManager():
 		#self.ip_swap("connect", is_connected)
 
 	def openvpn_disconnect(self):
-		processID = self.check_for_running_ovpn_process()
+		openvpn_PID = self.check_for_running_ovpn_process()
 		is_connected = False
 		
 		print("Disconnecting from vpn server...")
-		log.info(f"PID is: {'NONE' if not processID else processID}")
+		log.info(f"PID is: {'NONE' if not openvpn_PID else openvpn_PID}")
 
-		if not processID:
+		if not openvpn_PID:
 			print("Unable to disconnect, no OpenVPN process was found.")
 			log.warning("Could not find any OpenVPN processes.")
 			return False
@@ -156,13 +154,12 @@ class ConnectionManager():
 		log.info(f"Tested for internet connection: \"{is_connected}\"")
 
 		if not self.modify_dns(restore_original_dns=True):
-			print("Unable to restore DNS, restart NetworkManager after disconnecting from VPN.")
 			log.critical("Unable to restore DNS prior to disconnecting from VPN, restarting NetworkManager might be needed.")
 			
 		if not self.manage_ipv6(disable_ipv6=False):
 			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
 
-		var = subprocess.run(["sudo","kill", "-9", processID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		var = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
 		if var.returncode != 0:
 			print("Unable to disconnecto from VPN.")
@@ -356,7 +353,7 @@ class ConnectionManager():
 			ipv6_default = ["sysctl", "-w", "net.ipv6.conf.default.disable_ipv6=0"]
 			ipv6_all = ["sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=0"]
 			
-			if not cmd_command(ipv6_default, as_sudo=True) and not cmd_command(ipv6_all, as_sudo=True):
+			if (not cmd_command(ipv6_default, as_sudo=True)) or (not cmd_command(ipv6_all, as_sudo=True)):
 				print("Did not manage to restore IPV6, needs to be restored manually.")
 				log.warning("Could not restore IPV6.")
 				return False
@@ -403,7 +400,7 @@ class ConnectionManager():
 			with open(IPV6_BACKUP_FILE, "w") as file:
 				file.write(interface_to_save + " " + ipv6 + netmask)
 
-			if not cmd_command(ipv6_default, as_sudo=True) and not cmd_command(ipv6_all, as_sudo=True):
+			if (not cmd_command(ipv6_default, as_sudo=True)) or (not cmd_command(ipv6_all, as_sudo=True)):
 				log.critical("Unable to run CMD commands to disable IPV6.")
 				return False
 
@@ -449,25 +446,17 @@ class ConnectionManager():
 			return False
 
 	def is_vpn_running(self):
-		open_vpn_PID = False
-		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
-		try:
-			for command in command_list:
-				open_vpn_PID = cmd_command(command)
-				if open_vpn_PID:
-					break
-		except:
-			return False
+		openvpn_PID = self.check_for_running_ovpn_process()
 
 		cmd = "cat /etc/resolv.conf"
 		res = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-		# log.info(f"PID is: {'NONE' if not open_vpn_PID else open_vpn_PID}")
+		# log.info(f"PID is: {'NONE' if not openvpn_PID else openvpn_PID}")
 
-		if open_vpn_PID and (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
+		if openvpn_PID and (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
 			print("VPN is running with custom DNS.")
-			log.info(f"VPN is running\nOVPN PID:{open_vpn_PID}\nDNF conf:\n{res.stdout.decode()}")
-		elif open_vpn_PID and not (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
+			log.info(f"VPN is running\nOVPN PID:{openvpn_PID}\nDNF conf:\n{res.stdout.decode()}")
+		elif openvpn_PID and not (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
 			print("VPN is running, but there might be DNS leaks. Try modifying your DNS configurations.")
 			log.warning(f"Resolv conf has original values, custom ProtonVPN DNS configuration not found: {res.stdout.decode()}")
 		else:
@@ -475,14 +464,14 @@ class ConnectionManager():
 			log.info("Could not find any OpenVPN processes.")
 
 	def check_for_running_ovpn_process(self):
-		processID = False
+		openvpn_PID = False
 		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
 		#no need to try, since cmd_command already does that
 		try:
 			for command in command_list:
-				processID = cmd_command(command)
-				if processID:
-					return processID
+				openvpn_PID = cmd_command(command)
+				if openvpn_PID:
+					return openvpn_PID
 		except:
-			log.warning(f"Could not find any openvpn processes running, {processID}")
-			return processID
+			log.warning(f"Could not find any openvpn processes running.")
+			return openvpn_PID
