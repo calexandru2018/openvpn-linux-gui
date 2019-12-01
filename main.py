@@ -8,7 +8,7 @@ from include.utils.constants import (USER_CRED_FILE)
 class AppEntry():
 	def __init__(self):
 		self.showMenu()
-		self.connMan = ConnectionManager()
+		self.conn_manager = ConnectionManager()
 		self.switch()
 
 	def switch(self):
@@ -18,34 +18,35 @@ class AppEntry():
 				check_requirments()
 				continue
 			elif(self.choice == 2):
-				self.connMan.initialize_user_profile()
+				self.conn_manager.initialize_user_profile()
 				continue
 			elif(self.choice == 3):
-				self.connMan.edit_user_profile()
+				self.conn_manager.edit_user_profile()
 				continue
 			elif(self.choice == 4):
-				self.connMan.cache_servers()
+				self.conn_manager.cache_servers()
 				continue
 			elif(self.choice == 5):
-				self.connMan.generate_ovpn_file()
+				self.conn_manager.generate_ovpn_file()
 				continue
 			elif(self.choice == 6):
-				self.connMan.openvpn_connect()
+				# self.conn_manager.openvpn_connect()
+				self.conn_manager.connect_to_optimal_country_server()
 				continue
 			elif(self.choice == 7):
-				self.connMan.openvpn_disconnect()
+				self.conn_manager.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				self.connMan.openvpn_service_manager("enable")
+				self.conn_manager.openvpn_service_manager("enable")
 				continue
 			elif(self.choice == 9):
-				self.connMan.openvpn_service_manager("disable")
+				self.conn_manager.openvpn_service_manager("disable")
 				continue
 			elif(self.choice == 10):
 				print("Start/stop on boot service")
 				continue
 			elif(self.choice == 11):
-				self.connMan.openvpn_service_manager("restart")
+				self.conn_manager.openvpn_service_manager("restart")
 				continue
 			elif(self.choice == 12):
 				choice = input("[C]ustom or [R]estore ? : ")
@@ -54,10 +55,10 @@ class AppEntry():
 				if choice[0].lower() == "r":
 					restore_original_dns = True 
 
-				self.connMan.modify_dns(restore_original_dns=restore_original_dns)
+				self.conn_manager.modify_dns(restore_original_dns=restore_original_dns)
 				continue
 			elif(self.choice == 13):
-				self.connMan.restart_network_manager()
+				self.conn_manager.restart_network_manager()
 				continue
 			elif(self.choice == 14):
 				choice = input("Disable IPV6 ? : ")
@@ -66,13 +67,13 @@ class AppEntry():
 				if choice[0].lower() == "y":
 					disable_ipv6 = True
 
-				self.connMan.manage_ipv6(disable_ipv6=disable_ipv6)
+				self.conn_manager.manage_ipv6(disable_ipv6=disable_ipv6)
 				continue
 			elif(self.choice == 15):
 				print("Test things")
 				continue
 			elif(self.choice == 23):
-				self.connMan.is_vpn_running()
+				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
