@@ -109,7 +109,7 @@ class UserManager():
 		return True
 
 	def read_user_data(self, is_user_credentials=False):
-		'''Read user data, it either gets the user credentials or the server configurations set by the user.
+		'''Read user data, it either gets the user credentials or user preferences.
 
 		Params:
 		------
