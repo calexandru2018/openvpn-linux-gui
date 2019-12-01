@@ -193,4 +193,4 @@ def get_ip():
 	if not protonRequest:
 		return False
 	#print("Internet is OK and your IP is:", dyndnsIp)
-	return protonRequest['IP']
+	return (protonRequest['IP'], protonRequest['ISP'])
