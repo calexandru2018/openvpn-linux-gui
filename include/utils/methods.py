@@ -158,26 +158,6 @@ def delete_folder_recursive(path):
 		log.critical(f"Could not recursively delete folder: \"{path}\".")
 		return False
 
-def auto_select_optimal_server(data, tier):
-	"""Returns a tuple with information abou the most optimal server.
-	Returns:
-	-------
-	tuple (connection_ID, best_score, server_name) 
-	"""
-	best_score = 999
-	connection_ID = ''
-	server_name = ''
-	for server in data['serverList']:
-		if (data['serverList'][server]['score'] < best_score) and (int(data['serverList'][server]['tier']) == tier):
-			server_name = data['serverList'][server]['name']
-			connection_ID = data['serverList'][server]['id']
-			best_score = data['serverList'][server]['score']
-			server_load = data['serverList'][server]['load']
-
-	connectInfo = (connection_ID, best_score, server_name, server_load)
-	log.debug(f"Connection information {connectInfo}")
-	return connectInfo
-
 def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
@@ -185,16 +165,16 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 		try:
 			if as_sudo:
 				args[0].insert(0, "sudo")
-				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			else:
-				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-			ret_out = output.stdout.decode('ascii').strip()
-			log.debug(f"CMD output: {ret_out}")
-			return ret_out
+			decoded_output = raw_output.stdout.decode('ascii').strip()
+			log.debug(f"CMD output: {decoded_output}")
+			return decoded_output
 		except:
 			log.warning(f"Unable to run command with following args: {args}")
-			log.debug(f"Output: {output}")
+			log.debug(f"Output: {raw_output}")
 			return False
 
 # check for ip: get_ip()
