@@ -26,16 +26,17 @@ def walk_to_file(path, file, is_return_bool=True, in_dirs=False):
 				return True
 
 			return os.path.join(root, file)
-		else:
-			if not file in dirs:
-				log.warning(f"\"{file}\" was NOT found in \"{root}\".")
-				return False
-			
-			log.info(f"\"{file}\" was found in \"{root}\".")
-			
-			if is_return_bool:
-				return True
-			return os.path.join(root, file)
+		
+		if not file in dirs:
+			log.warning(f"\"{file}\" was NOT found in \"{root}\".")
+			return False
+		
+		log.info(f"\"{file}\" was found in \"{root}\".")
+		
+		if is_return_bool:
+			return True
+
+		return os.path.join(root, file)
 
 def create_file(path, content):
 	'''Creates the file and writes content to it.
@@ -127,6 +128,7 @@ def folder_exist(path):
 	if not os.path.isdir(path):
 		log.info(f"Folder \"{path}\" DOES NOT exist.")
 		return False
+
 	log.info(f"Folder \"{path}\" DOES exist.")
 	return True
 
@@ -134,6 +136,7 @@ def create_folder(path):
 	if folder_exist(path): 
 		log.info(f"Folder \"{path}\" already exists.")
 		return False
+
 	try:
 		os.mkdir(path)
 		log.info(f"Folder \"{path}\" was created.")
@@ -175,11 +178,6 @@ def auto_select_optimal_server(data, tier):
 	log.debug(f"Connection information {connectInfo}")
 	return connectInfo
 
-def to_ascii(byteValue):
-	if not byteValue:
-		return False
-	return byteValue.decode('ascii')
-
 def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
@@ -191,7 +189,7 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 			else:
 				output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-			ret_out = to_ascii(output.stdout).strip()
+			ret_out = output.stdout.decode('ascii').strip()
 			log.debug(f"CMD output: {ret_out}")
 			return ret_out
 		except:
