@@ -31,6 +31,7 @@ class ConnectionManager():
 
 		log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
 		print("Modifying dns...")
+
 		if not restore_original_dns:
 			cmd = False
 
@@ -54,7 +55,7 @@ class ConnectionManager():
 				log.warning("Unable to apply custom ProtonVPN DNS configurations.")
 				return False
 		else:
-			log.info("\"Restoring original DNS\" process started...")
+			log.info("Restoring original DNS...")
 			try:
 				with open(RESOLV_BACKUP_FILE) as f:
 					content = f.read()
@@ -116,11 +117,10 @@ class ConnectionManager():
 			return False
 
 		var = subprocess.run(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		log.debug(var)
 
 		if var.returncode != 0:
 			print("Unable to connecto to VPN.")
-			log.critical("Unable to connected to VPN.")
+			log.critical(f"Unable to connected to VPN, \"{var}\"")
 			return False
 
 		log.info("Connected to VPN.")
