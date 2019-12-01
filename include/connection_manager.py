@@ -21,6 +21,13 @@ class ConnectionManager():
 		self.server_manager = ServerManager()
 		self.user_manager = UserManager()
 
+	def connect_to_optimal_country_server(self):
+		self.cache_servers()
+		if not self.generate_ovpn_file():
+			return False
+		if not self.openvpn_connect():
+			return False
+
 	# modify DNS: modify_dns()
 	def modify_dns(self, restore_original_dns=False):
 		resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
@@ -29,8 +36,6 @@ class ConnectionManager():
 			print("The \"resolv.conf\" file was not found on your system.")
 			log.warning("\"resolv.conf\" file was not found.")
 			return False
-
-
 
 		log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
 		print("Modifying dns...")
@@ -85,7 +90,7 @@ class ConnectionManager():
 		
 		# print("value of actual IP", self.actual_ip)
 		try:
-			new_IP = get_ip()
+			new_IP, new_ISP  = get_ip()
 		except:
 			print("Unable to get new IP")
 
@@ -98,7 +103,7 @@ class ConnectionManager():
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
 		openvpn_PID = self.check_for_running_ovpn_process()
-		is_connected = False
+		pre_vpn_conn_ip = False
 
 		if openvpn_PID:
 			print("Unable to connect, a OpenVPN process is already running.")
@@ -107,13 +112,14 @@ class ConnectionManager():
 		
 		print("Connecting to vpn server...")
 		try:
-			is_connected = get_ip()
+			pre_vpn_conn_ip, pre_vpn_conn_isp = get_ip()
 		except:
-			is_connected = False
+			pre_vpn_conn_ip = False
+			pre_vpn_conn_isp = False
 
-		log.info(f"Tested for internet connection: \"{is_connected}\"")
+		log.info(f"Tested for internet connection: \"{pre_vpn_conn_ip}\"")
 
-		if not is_connected:
+		if not pre_vpn_conn_ip:
 			print("There is no internet connection.")
 			log.warning("Unable to connect, check your internet connection.")
 		
@@ -130,9 +136,20 @@ class ConnectionManager():
 			log.critical(f"Unable to connected to VPN, \"{var}\"")
 			return False
 
+		# time.sleep(2)
+
+		# try:
+		# 	post_vpn_conn_ip, post_vpn_conn_isp = get_ip()
+		# except:
+		# 	post_vpn_conn_ip = False
+		# 	post_vpn_conn_isp = False
+
+		# print(f"Old IP: {pre_vpn_conn_ip} and old IPS: {pre_vpn_conn_isp}\nNew IP: {post_vpn_conn_ip} and new IPS: {post_vpn_conn_isp}")
+		
 		log.info("Connected to VPN.")
 		print("You are connected to the VPN.")
-		#self.ip_swap("connect", is_connected)
+		return True
+		#self.ip_swap("connect", pre_vpn_conn_ip)
 
 	def openvpn_disconnect(self):
 		openvpn_PID = self.check_for_running_ovpn_process()
@@ -168,6 +185,7 @@ class ConnectionManager():
 
 		log.info("Disconnected from VPN.")
 		print("You are disconnected from VPN.")
+		return True
 		#self.ip_swap("disconnect", is_connected)
 
 	def generate_ovpn_file(self):
