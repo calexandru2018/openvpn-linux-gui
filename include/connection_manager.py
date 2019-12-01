@@ -6,7 +6,7 @@ from include.server_manager import ServerManager
 # Helper methods and constants 
 from include.utils.methods import (
 	walk_to_file, create_file, delete_file, delete_folder_recursive,
-	cmd_command, auto_select_optimal_server, get_ip, edit_file
+	cmd_command, get_ip, edit_file
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
@@ -14,6 +14,7 @@ from include.utils.constants import (
 )
 
 from include.logger import log
+from include.utils.server_selection import auto_select_optimal_server
 
 class ConnectionManager():
 	def __init__(self):
@@ -28,6 +29,8 @@ class ConnectionManager():
 			print("The \"resolv.conf\" file was not found on your system.")
 			log.warning("\"resolv.conf\" file was not found.")
 			return False
+
+
 
 		log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
 		print("Modifying dns...")
@@ -94,7 +97,13 @@ class ConnectionManager():
 
 	# connect to open_vpn: openvpn_connect()
 	def openvpn_connect(self):
+		processID = self.check_for_running_ovpn_process()
 		is_connected = False
+
+		if processID:
+			print("Unable to connect, a OpenVPN process is already running.")
+			log.info("Unable to connect, a OpenVPN process is already running.")
+			return False
 		
 		print("Connecting to vpn server...")
 		try:
@@ -124,26 +133,17 @@ class ConnectionManager():
 			return False
 
 		log.info("Connected to VPN.")
-		print("You are connected to the vpn.")
-		self.ip_swap("connect", is_connected)
+		print("You are connected to the VPN.")
+		#self.ip_swap("connect", is_connected)
 
 	def openvpn_disconnect(self):
-		getPID = False
+		processID = self.check_for_running_ovpn_process()
 		is_connected = False
-		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
-		try:
-			for command in command_list:
-				getPID = cmd_command(command)
-				if getPID:
-					break
-		except:
-			# print("cant find running openvpn process")
-			return False	
 		
 		print("Disconnecting from vpn server...")
-		log.info(f"PID is: {'NONE' if not getPID else getPID}")
+		log.info(f"PID is: {'NONE' if not processID else processID}")
 
-		if not getPID:
+		if not processID:
 			print("Unable to disconnect, no OpenVPN process was found.")
 			log.warning("Could not find any OpenVPN processes.")
 			return False
@@ -154,13 +154,24 @@ class ConnectionManager():
 			is_connected = False
 		
 		log.info(f"Tested for internet connection: \"{is_connected}\"")
-		if self.modify_dns(restore_original_dns=True):
-			self.manage_ipv6(disable_ipv6=False)
-			var = subprocess.Popen(["sudo","kill", "-9", getPID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
-			var.wait()
-			self.ip_swap("disconnect", is_connected)
+
+		if not self.modify_dns(restore_original_dns=True):
+			print("Unable to restore DNS, restart NetworkManager after disconnecting from VPN.")
+			log.critical("Unable to restore DNS prior to disconnecting from VPN, restarting NetworkManager might be needed.")
 			
+		if not self.manage_ipv6(disable_ipv6=False):
+			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
+
+		var = subprocess.run(["sudo","kill", "-9", processID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
+		if var.returncode != 0:
+			print("Unable to disconnecto from VPN.")
+			log.critical(f"Unable to disconnecto from VPN, \"{var}\"")
+			return False
+
+		log.info("Disconnected from VPN.")
+		print("You are disconnected from VPN.")
+		#self.ip_swap("disconnect", is_connected)
 
 	def generate_ovpn_file(self):
 		'''Generates OVPN files
@@ -278,7 +289,7 @@ class ConnectionManager():
 			with open(os.path.join(CACHE_FOLDER, file)) as file:
 				data = json.load(file)
 		except:
-			log.warning("Could not fint cached server.")
+			log.warning("Could not find cached server.")
 			return False
 
 		user_pref = json.loads(self.user_manager.read_user_data())
@@ -462,3 +473,16 @@ class ConnectionManager():
 		else:
 			print("VPN is not running.")
 			log.info("Could not find any OpenVPN processes.")
+
+	def check_for_running_ovpn_process(self):
+		processID = False
+		command_list = [["pgrep", "openvpn"], ["pid", "openvpn"]]
+		#no need to try, since cmd_command already does that
+		try:
+			for command in command_list:
+				processID = cmd_command(command)
+				if processID:
+					return processID
+		except:
+			log.warning(f"Could not find any openvpn processes running, {processID}")
+			return processID
