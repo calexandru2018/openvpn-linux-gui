@@ -1,7 +1,7 @@
 import os, shutil, subprocess, requests, re
 
 from include.utils.constants import (
-	PROTON_CHECK_URL, PROTON_HEADERS, DYNDNS_CHECK_URL
+	PROTON_CHECK_URL, PROTON_HEADERS, DYNDNS_CHECK_URL, CACHE_FOLDER
 )
 
 from include.logger import log
@@ -194,3 +194,25 @@ def get_ip():
 		return False
 	#print("Internet is OK and your IP is:", dyndnsIp)
 	return (protonRequest['IP'], protonRequest['ISP'])
+
+# Optimize when disconnecting, check for openvpn pid
+def ip_swap(self, action, actual_IP):
+	success_msg = "Connected to vpn server."
+	fail_msg = "Unable to connect to vpn server."
+	new_IP = False
+
+	if action == "disconnect":
+		success_msg = "Disconnected from vpn server."
+		fail_msg = "Unable to disconnected from vpn server."
+	
+	# print("value of actual IP", self.actual_ip)
+	try:
+		new_IP, new_ISP  = get_ip()
+	except:
+		print("Unable to get new IP")
+
+	if (actual_IP and new_IP) and actual_IP != new_IP:
+		print(success_msg)
+		delete_folder_recursive(CACHE_FOLDER)
+	else:
+		print(fail_msg)
