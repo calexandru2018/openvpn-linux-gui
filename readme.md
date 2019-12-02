@@ -1,5 +1,5 @@
 # openvpn-linux-gui [alpha v0.1]
-A GUI that improves the UX of OPENVPN (should ready by alpha v0.2) for such services as ProtonVPN.
+A GUI that improves the UX of ProtonVPN.
 
 Actual Situation:
 ======

@@ -52,9 +52,8 @@ class ServerManager():
 			'US': 'United States',
 			'ZA': 'South Africa',
 		}
-		#self.collectServerList()
 	
-	def collectServerList(self):
+	def get_servers(self):
 		serverReq = requests.get(PROTON_SERVERS_URL, headers=(PROTON_HEADERS)).json()
 		for server in serverReq['LogicalServers']:
 			if server['EntryCountry'] in self.countryList:
@@ -76,11 +75,12 @@ class ServerManager():
 				'features': server['Features'],
 				'servers': server['Servers'],
 			}
-		self.saveCountryList()
+		# self.saveCountryList()
 		#print(json.dumps(self.serverList, indent=2))
 
 	#methods saves one country per json file
-	def saveCountryList(self):
+	def cache_servers(self):
+		self.get_servers()
 		if not folder_exist(CACHE_FOLDER):
 			create_folder(CACHE_FOLDER)
 		else:
