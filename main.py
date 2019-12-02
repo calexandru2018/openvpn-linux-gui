@@ -3,6 +3,7 @@ import os, subprocess
 from include.connection_manager import ConnectionManager
 from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
+from include.utils.connection_manager_helper import(generate_ovpn_file, modify_dns, manage_ipv6)
 
 # app main class
 class AppEntry():
@@ -23,30 +24,29 @@ class AppEntry():
 			elif(self.choice == 3):
 				self.conn_manager.edit_user_profile()
 				continue
-			elif(self.choice == 4):
-				self.conn_manager.cache_servers()
-				continue
-			elif(self.choice == 5):
-				self.conn_manager.generate_ovpn_file()
-				continue
+			# elif(self.choice == 4):
+			# 	self.conn_manager.cache_servers()
+			# 	continue
+			# elif(self.choice == 5):
+			# 	generate_ovpn_file()
+			# 	continue
 			elif(self.choice == 6):
-				# self.conn_manager.openvpn_connect()
 				self.conn_manager.connect_to_optimal_country_server()
 				continue
 			elif(self.choice == 7):
 				self.conn_manager.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				self.conn_manager.openvpn_service_manager("enable")
+				self.conn_manager.start_openvpn_on_boot("enable")
 				continue
 			elif(self.choice == 9):
-				self.conn_manager.openvpn_service_manager("disable")
+				self.conn_manager.start_openvpn_on_boot("disable")
 				continue
 			elif(self.choice == 10):
 				print("Start/stop on boot service")
 				continue
 			elif(self.choice == 11):
-				self.conn_manager.openvpn_service_manager("restart")
+				self.conn_manager.start_openvpn_on_boot("restart")
 				continue
 			elif(self.choice == 12):
 				choice = input("[C]ustom or [R]estore ? : ")
@@ -55,7 +55,7 @@ class AppEntry():
 				if choice[0].lower() == "r":
 					restore_original_dns = True 
 
-				self.conn_manager.modify_dns(restore_original_dns=restore_original_dns)
+				modify_dns(restore_original_dns=restore_original_dns)
 				continue
 			elif(self.choice == 13):
 				self.conn_manager.restart_network_manager()
@@ -67,10 +67,19 @@ class AppEntry():
 				if choice[0].lower() == "y":
 					disable_ipv6 = True
 
-				self.conn_manager.manage_ipv6(disable_ipv6=disable_ipv6)
+				manage_ipv6(disable_ipv6=disable_ipv6)
 				continue
 			elif(self.choice == 15):
 				print("Test things")
+				continue
+			elif(self.choice == 20):
+				self.conn_manager.connect_to_p2p()
+				continue
+			elif(self.choice == 21):
+				self.conn_manager.connect_to_tor()
+				continue
+			elif(self.choice == 22):
+				self.conn_manager.connect_to_secure_core()
 				continue
 			elif(self.choice == 23):
 				self.conn_manager.is_vpn_running()
