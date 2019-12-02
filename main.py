@@ -37,7 +37,8 @@ class AppEntry():
 				self.conn_manager.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				self.conn_manager.start_openvpn_on_boot("enable")
+				# self.conn_manager.start_openvpn_on_boot("enable")
+				self.conn_manager.start_on_boot()
 				continue
 			elif(self.choice == 9):
 				self.conn_manager.start_openvpn_on_boot("disable")

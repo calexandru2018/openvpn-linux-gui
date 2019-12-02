@@ -34,13 +34,50 @@ class ConnectionManager():
 			print("Data updated successfully")
 	#the above two methods must be moved elsewhere
 
+	def start_on_boot(self):
+		self.server_manager.cache_servers()
+		server_collection = []
+
+		user_inp_country = input("Which country do you want to start on boot ? ").strip().upper()
+		server_list_file = user_inp_country+SERVER_FILE_TYPE
+
+		#load country configurations
+		try:
+			with open(os.path.join(CACHE_FOLDER, server_list_file)) as file:
+				server_list = json.load(file)
+		except TypeError:
+			print("Servers are not cached.")
+			log.warning("Servers are not cached.") 
+			return False
+
+		#load user preferences
+		try:
+			user_pref = self.user_manager.read_user_data()
+		except:
+			print("Profile was not initialized.")
+			log.warning("User profile was not initialized.")
+			return False
+
+		print("Server name|\tServer Load|\tFeatures|\tTier")
+		for server in server_list['serverList']:
+			if server_list['serverList'][server]['tier'] <= user_pref['tier']:
+				server_collection.append(server_list['serverList'][server])
+				print(
+					server_list['serverList'][server]['name']+"|\t\t\t"+str(server_list['serverList'][server]['load'])+"|\t"+
+					str(server_list['serverList'][server]['features'])+"|\t\t"+str(server_list['serverList'][server]['tier'])
+				)
+		
+		selected_server = input("Which server to connecto on boot: ")
+		
+		print(server_collection[0]['name'] in selected_server)
+
 	def fastest_country(self):
 		server_feature_filter = [1, 2]
 		server_collection = []
 		self.server_manager.cache_servers()
 
-		country = input("Which country to connect to: ")
-		file = country.upper() + SERVER_FILE_TYPE
+		country = input("Which country to connect to: ").strip().upper()
+		file = country+SERVER_FILE_TYPE
 
 		#load country configurations
 		try:
