@@ -31,7 +31,7 @@ class AppEntry():
 			# 	generate_ovpn_file()
 			# 	continue
 			elif(self.choice == 6):
-				self.conn_manager.connect_to_optimal_country_server()
+				self.conn_manager.fastest_country()
 				continue
 			elif(self.choice == 7):
 				self.conn_manager.openvpn_disconnect()
