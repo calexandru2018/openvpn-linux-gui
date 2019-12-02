@@ -4,16 +4,17 @@ from include.user_manager import UserManager
 from include.server_manager import ServerManager
 
 # Helper methods and constants 
-from include.utils.methods import (
+from include.utils.common_methods import (
 	walk_to_file, create_file, delete_file, delete_folder_recursive,
-	cmd_command, get_ip, edit_file
+	cmd_command, edit_file
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
 	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
 )
 from include.utils.connection_manager_helper import(
-	generate_ovpn_file, generate_ovpn_for_boot, modify_dns, manage_ipv6,
+	generate_ovpn_file, generate_ovpn_for_boot, modify_dns, 
+	manage_ipv6, get_ip_info, get_fastest_server, req_for_ovpn_file
 )
 
 from include.logger import log
@@ -23,7 +24,7 @@ class ConnectionManager():
 		self.server_manager = ServerManager()
 		self.user_manager = UserManager()
 
-	#Functions below do not belong to connecton manager
+	#functions below do not belong to connecton manager
 	def initialize_user_profile(self):
 		self.user_manager.create_user_credentials_file()
 		self.user_manager.create_user_pref_file()
@@ -31,24 +32,66 @@ class ConnectionManager():
 	def edit_user_profile(self):
 		if self.user_manager.ask_what_to_edit():
 			print("Data updated successfully")
-	#Above two methods must be moved elsewhere
+	#the above two methods must be moved elsewhere
 
-
-	def connect_to_optimal_country_server(self):
+	def fastest_country(self):
+		server_feature_filter = [1, 2]
+		server_collection = []
 		self.server_manager.cache_servers()
-		if not generate_ovpn_file(self.user_manager.read_user_data()):
+
+		country = input("Which country to connect to: ")
+		file = country.upper() + SERVER_FILE_TYPE
+
+		#load country configurations
+		try:
+			with open(os.path.join(CACHE_FOLDER, file)) as file:
+				server_list = json.load(file)
+		except TypeError:
+			print("Servers are not cached.")
+			log.warning("Servers are not cached.") 
 			return False
+
+		#load user preferences
+		try:
+			user_pref = self.user_manager.read_user_data()
+		except:
+			print("Profile was not initialized.")
+			log.warning("User profile was not initialized.")
+			return False
+
+		#filter by features and tier
+		for server in server_list['serverList']:
+			if server_list['serverList'][server]['features'] not in server_feature_filter and server_list['serverList'][server]['tier'] <= user_pref['tier']:
+			# if server_list['serverList'][server]['features'] not in server_feature_filter:
+				# print(server_list['serverList'][server]['name'],server_list['serverList'][server]['score'])
+				server_collection.append(server_list['serverList'][server])
+
+		if not len(server_collection):
+			print("Nothing")
+			return False
+		
+		server_id, server_score, server_name, server_load = get_fastest_server(server_collection)
+		user_pref['last_conn_server_id'] = server_id
+		user_pref['last_conn_sever_name'] = server_name
+		user_pref['last_conn_sever_protocol'] = user_pref['protocol']
+
+		server_req = req_for_ovpn_file(server_id, user_pref['protocol'])
+
+		if not server_req:
+			return False
+
+		if not generate_ovpn_file(server_list, server_req):
+			return False
+
 		if not self.openvpn_connect():
 			return False
+		
+		edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False)
+		log.info(f"Updated user last connection data: \"{user_pref}\"")
 
-	def connect_to_p2p(self):
-		print("P2P")
-	
-	def connect_to_tor(self):
-		print("To TOR")
-	
-	def connect_to_secure_core(self):
-		print("Secure Core")
+	#to-do. Should filter all servers by the specified feature and then select with the best score.
+	def fastest_feature(self, feature):
+		print("Feature")
 	
 	def connect_to_random(self):
 		print("Connect to random")
@@ -65,7 +108,7 @@ class ConnectionManager():
 		
 		print("Connecting to vpn server...")
 		try:
-			pre_vpn_conn_ip, pre_vpn_conn_isp = get_ip()
+			pre_vpn_conn_ip, pre_vpn_conn_isp = get_ip_info()
 		except:
 			pre_vpn_conn_ip = False
 			pre_vpn_conn_isp = False
@@ -92,12 +135,15 @@ class ConnectionManager():
 		# time.sleep(2)
 
 		# try:
-		# 	post_vpn_conn_ip, post_vpn_conn_isp = get_ip()
+		# 	post_vpn_conn_ip, post_vpn_conn_isp = get_ip_info()
 		# except:
 		# 	post_vpn_conn_ip = False
 		# 	post_vpn_conn_isp = False
 
 		# print(f"Old IP: {pre_vpn_conn_ip} and old IPS: {pre_vpn_conn_isp}\nNew IP: {post_vpn_conn_ip} and new IPS: {post_vpn_conn_isp}")
+		
+		if not delete_folder_recursive(CACHE_FOLDER):
+			log.info("Cache folder was not deleted.")
 		
 		log.info("Connected to VPN.")
 		print("You are connected to the VPN.")
@@ -117,7 +163,7 @@ class ConnectionManager():
 			return False
 
 		try:
-			is_connected = get_ip()
+			is_connected = get_ip_info()
 		except:
 			is_connected = False
 		
@@ -168,7 +214,7 @@ class ConnectionManager():
 			success_msg = "\"Launch on boot\" service was restarted."
 			fail_msg = "Cant restart service \"launch on boot\"."
 
-		user_pref = json.loads(self.user_manager.read_user_data())
+		user_pref = self.user_manager.read_user_data()
 
 		try:
 			output = subprocess.run(["sudo", "systemctl", action, ON_BOOT_PROCESS_NAME], stdout=subprocess.PIPE)
