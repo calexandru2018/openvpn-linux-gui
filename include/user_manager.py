@@ -1,7 +1,7 @@
 import json, getpass
 
 from include.utils.constants import (USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE, USER_FOLDER, USER_CRED_FILE, USER_PREF_FILE)
-from include.utils.methods import (walk_to_file, create_file, edit_file, delete_file, create_folder,folder_exist)
+from include.utils.common_methods import (walk_to_file, create_file, edit_file, delete_file, create_folder,folder_exist)
 
 class UserManager():
 	'''Creates, edits and deletes user data.
@@ -129,9 +129,9 @@ class UserManager():
 			
 		try:
 			with open(user_data_path, "r") as file:
-				return file.read()
+				return json.loads(file.read())
 		except:
-			print("Unable to read file")
+			print("Unable to read user preferences file.")
 			return False
 
 	# Check if user exists (both files should be True to return True)

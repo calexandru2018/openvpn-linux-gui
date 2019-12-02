@@ -1,7 +1,7 @@
 import requests, json, os
 
 from include.utils.constants import (CACHE_FOLDER, CACHE_FOLDER, SERVER_FILE_TYPE, PROTON_SERVERS_URL, PROTON_HEADERS)
-from include.utils.methods import(create_file, edit_file, walk_to_file, create_folder, delete_folder_recursive, folder_exist)
+from include.utils.common_methods import(create_file, edit_file, walk_to_file, create_folder, delete_folder_recursive, folder_exist)
 
 class ServerManager():
 	def __init__(self):
