@@ -10,7 +10,7 @@ from include.utils.common_methods import (
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
+	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME, LOG_FILE
 )
 from include.utils.connection_manager_helper import(
 	generate_ovpn_file, generate_ovpn_for_boot, modify_dns, 
@@ -209,23 +209,40 @@ class ConnectionManager():
 		
 		if not manage_ipv6(disable_ipv6=True):
 			return False
+		
+		# Needs to be worked on, new way to connect to VPN, might help with killswitch
+		# with open(LOG_FILE, "w+") as log_file:
+		# 	subprocess.Popen(
+		# 		[	"sudo",
+		# 			"openvpn",
+		# 			"--config", OVPN_FILE,
+		# 			"--auth-user-pass", USER_CRED_FILE
+		# 		],
+		# 		stdout=log_file, stderr=log_file
+		# 	)
 
-		var = subprocess.run(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		# with open(LOG_FILE, "r") as log_file:
+		# 	while True:
+		# 		content = log_file.read()
+		# 		log_file.seek(0)
+		# 		if "Initialization Sequence Completed" in content:
+		# 			print("VPN established")
+		# 			#change DNS
+		# 			#disable IPV6
+		# 			break
+		# 		elif "AUTH_FAILED" in content:
+		# 			print("Authentication failed")
+		# 			break
 
-		if var.returncode != 0:
+
+		output = subprocess.run(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+		if output.returncode != 0:
 			print("Unable to connecto to VPN.")
-			log.critical(f"Unable to connected to VPN, \"{var}\"")
+			log.critical(f"Unable to connected to VPN, \"{output}\"")
 			return False
 
-		# time.sleep(2)
-
-		# try:
-		# 	post_vpn_conn_ip, post_vpn_conn_isp = get_ip_info()
-		# except:
-		# 	post_vpn_conn_ip = False
-		# 	post_vpn_conn_isp = False
-
-		# print(f"Old IP: {pre_vpn_conn_ip} and old IPS: {pre_vpn_conn_isp}\nNew IP: {post_vpn_conn_ip} and new IPS: {post_vpn_conn_isp}")
+		log.debug(f"\"{output}\"")
 		
 		if not delete_folder_recursive(CACHE_FOLDER):
 			log.info("Cache folder was not deleted.")
@@ -259,11 +276,11 @@ class ConnectionManager():
 		if not manage_ipv6(disable_ipv6=False):
 			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
 
-		var = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		output = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
-		if var.returncode != 0:
+		if output.returncode != 0:
 			print("Unable to disconnecto from VPN.")
-			log.critical(f"Unable to disconnecto from VPN, \"{var}\"")
+			log.critical(f"Unable to disconnecto from VPN, \"{output}\"")
 			return False
 
 		log.info("Disconnected from VPN.")
