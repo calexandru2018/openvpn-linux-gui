@@ -24,31 +24,37 @@ class AppEntry():
 			elif(self.choice == 3):
 				self.conn_manager.edit_user_profile()
 				continue
-			# elif(self.choice == 4):
-			# 	self.conn_manager.cache_servers()
-			# 	continue
-			# elif(self.choice == 5):
-			# 	generate_ovpn_file()
-			# 	continue
-			elif(self.choice == 6):
-				self.conn_manager.connect_to_optimal_country_server()
+			elif(self.choice == 4):
+				self.conn_manager.fastest_country()
 				continue
-			elif(self.choice == 7):
+			elif(self.choice == 5):
 				self.conn_manager.openvpn_disconnect()
 				continue
+			elif(self.choice == 6):
+				self.conn_manager.start_on_boot_manager("enable")
+				continue
+			elif(self.choice == 7):
+				self.conn_manager.start_on_boot_manager("disable")
+				continue
 			elif(self.choice == 8):
-				self.conn_manager.start_openvpn_on_boot("enable")
+				self.conn_manager.start_on_boot_manager("restart")
 				continue
 			elif(self.choice == 9):
-				self.conn_manager.start_openvpn_on_boot("disable")
+				print("Quick connect to quickest server, country independent.")
 				continue
 			elif(self.choice == 10):
-				print("Start/stop on boot service")
+				self.conn_manager.fastest_feature("p2p")
 				continue
 			elif(self.choice == 11):
-				self.conn_manager.start_openvpn_on_boot("restart")
+				self.conn_manager.fastest_feature("tor")
 				continue
 			elif(self.choice == 12):
+				self.conn_manager.fastest_feature("secure core")
+				continue
+			elif(self.choice == 13):
+				self.conn_manager.fastest_feature("Connect to last connected.")
+				continue
+			elif(self.choice == 14):
 				choice = input("[C]ustom or [R]estore ? : ")
 				restore_original_dns = False
 
@@ -57,10 +63,10 @@ class AppEntry():
 
 				modify_dns(restore_original_dns=restore_original_dns)
 				continue
-			elif(self.choice == 13):
+			elif(self.choice == 15):
 				self.conn_manager.restart_network_manager()
 				continue
-			elif(self.choice == 14):
+			elif(self.choice == 16):
 				choice = input("Disable IPV6 ? : ")
 				disable_ipv6 = False
 
@@ -69,20 +75,11 @@ class AppEntry():
 
 				manage_ipv6(disable_ipv6=disable_ipv6)
 				continue
-			elif(self.choice == 15):
-				print("Test things")
-				continue
-			elif(self.choice == 20):
-				self.conn_manager.connect_to_p2p()
-				continue
-			elif(self.choice == 21):
-				self.conn_manager.connect_to_tor()
-				continue
-			elif(self.choice == 22):
-				self.conn_manager.connect_to_secure_core()
-				continue
-			elif(self.choice == 23):
+			elif(self.choice == 17):
 				self.conn_manager.is_vpn_running()
+				continue
+			elif(self.choice == 99):
+				print("Test things")
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -100,28 +97,27 @@ class AppEntry():
 	!!!!	       Made by Alexandru Cheltuitor         !!!!
 	!!!!                                                !!!!
 	!!!!	            openvpn-linux-cli               !!!!
-	!!!!                   Alpha v0.1.0                 !!!!
+	!!!!                   Alpha v0.2.0                 !!!!
 	!!!!                                                !!!! 
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	[1] - Check Requirments\t\t [8] - Enable "start on boot" service
-	[2] - Create user\t\t [9] - Disable "start on boot" service
-	[3] - Edit User\t\t\t [10] - Start/Stop "start on boot" service
-	[4] - Cache Servers\t\t [11] - Restart "start on boot" service
-	[5] - Generate OPVN file\t [12] - Manage DNS
-	[6] - OpenVPN Connect\t\t [13] - Restart NetworkManager
-	[7] - OpenVPN Disconnect\t [14] - Manage IPV6
+	[1] - Check Requirments\t\t\t [9] - Quick Connect [Under work]
+	[2] - Create user\t\t\t [10] - Connect to P2P [Under work]
+	[3] - Edit User\t\t\t\t [11] - Connect to TOR [Under work]
+	[4] - VPN Fastest by Country\t\t [12] - Connect to Secure Core [Under work]
+	[5] - Disconnect VPN \t\t\t [13] - Connect to last selected [Under work]
+	[6] - Enable "start on boot" service \t\t 
+	[7] - Disable "start on boot" service \t\t
+	[8] - Restart "start on boot" service \t\t 
 
 
-	[15] - End active VPN sessions\t\t [23] - Is VPN Running
-	[16] - Check DNS\t\t
-	[17] - Quick Connect\t\t
-	[18] - Connect to last selected\t\t
-	[19] - Connect to quickest[country]\t\t
-	[20] - Connect to P2P\t\t
-	[21] - Connect to TOR\t\t
-	[22] - Connect to Secure Core\t\t
+	[14] - Manage DNS
+	[15] - Restart NetworkManager
+	[16] - Manage IPV6
+	[17] - Is VPN Running
+	[99] - Test purpose
 
+	[50] - End active VPN sessions [Not working]
 
 	[0] - Exit
 	""")
