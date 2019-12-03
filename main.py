@@ -75,7 +75,7 @@ class AppEntry():
 
 				manage_ipv6(disable_ipv6=disable_ipv6)
 				continue
-			elif(self.choice == 19):
+			elif(self.choice == 17):
 				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 99):
@@ -97,7 +97,7 @@ class AppEntry():
 	!!!!	       Made by Alexandru Cheltuitor         !!!!
 	!!!!                                                !!!!
 	!!!!	            openvpn-linux-cli               !!!!
-	!!!!                   Alpha v0.1.0                 !!!!
+	!!!!                   Alpha v0.2.0                 !!!!
 	!!!!                                                !!!! 
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -114,7 +114,7 @@ class AppEntry():
 	[14] - Manage DNS
 	[15] - Restart NetworkManager
 	[16] - Manage IPV6
-	[19] - Is VPN Running
+	[17] - Is VPN Running
 	[99] - Test purpose
 
 	[50] - End active VPN sessions [Not working]
