@@ -37,17 +37,16 @@ class AppEntry():
 				self.conn_manager.openvpn_disconnect()
 				continue
 			elif(self.choice == 8):
-				# self.conn_manager.start_openvpn_on_boot("enable")
-				self.conn_manager.start_on_boot()
+				self.conn_manager.start_on_boot_manager("enable")
 				continue
 			elif(self.choice == 9):
-				self.conn_manager.start_openvpn_on_boot("disable")
+				self.conn_manager.start_on_boot_manager("disable")
 				continue
 			elif(self.choice == 10):
 				print("Start/stop on boot service")
 				continue
 			elif(self.choice == 11):
-				self.conn_manager.start_openvpn_on_boot("restart")
+				self.conn_manager.start_on_boot_manager("restart")
 				continue
 			elif(self.choice == 12):
 				choice = input("[C]ustom or [R]estore ? : ")
