@@ -329,3 +329,5 @@ class ConnectionManager():
 			return openvpn_PID
 
 	
+	def test(self):
+		print("Test")
