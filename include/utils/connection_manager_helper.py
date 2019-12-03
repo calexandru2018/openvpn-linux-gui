@@ -1,43 +1,41 @@
 import os, json, netifaces, re, requests, shutil, subprocess
 
 # Helper methods and constants 
-from include.utils.methods import (
+from include.utils.common_methods import (
 	walk_to_file, create_file, delete_file, delete_folder_recursive,
-	cmd_command, get_ip, edit_file
+	cmd_command, edit_file
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
+	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME,PROTON_CHECK_URL
 )
 
 from include.logger import log
 
-def auto_select_optimal_server(data, tier):
-	"""Returns a tuple with information abou the most optimal server.
-	
-	data: information about server of a specific country
-	tier: the actual user tier
-
-	
-	Returns: tuple (connection_ID, best_score, server_name, server_load) 
-	-------
+def get_fastest_server(server_list):
 	"""
-	best_score = 999
-	connection_ID = ''
-	server_name = ''
+	Returns the fastest server from the list.
+	"""
 
-	for server in data['serverList']:
-		if (data['serverList'][server]['score'] < best_score) and (int(data['serverList'][server]['tier']) == tier):
-			server_name = data['serverList'][server]['name']
-			connection_ID = data['serverList'][server]['id']
-			best_score = data['serverList'][server]['score']
-			server_load = data['serverList'][server]['load']
+	fastest_server = sorted(server_list, key=lambda server: server["score"])
+	log.debug(f"Connection information {fastest_server}")
+	return (fastest_server[0]['id'], fastest_server[0]['score'], fastest_server[0]['name'], fastest_server[0]['load'])
 
-	connectInfo = (connection_ID, best_score, server_name, server_load)
-	log.debug(f"Connection information {connectInfo}")
-	return connectInfo
+def req_for_ovpn_file(server_id, user_protocol):
+	"""
+	Makes a request to ProtonVPN servers and returns with a OVPN template "file", returns False otherwise.
+	"""
 
-def generate_ovpn_file(user_data):
+	url = f"https://api.protonmail.ch/vpn/config?Platform={OS_PLATFORM}&LogicalID={server_id}&Protocol={user_protocol}"
+
+	try:
+		log.info("Fetched request from ProtonVPN.")
+		return requests.get(url, headers=(PROTON_HEADERS))
+	except:
+		log.critical("Unable to fetch request from ProtonVPN.")
+		return False
+
+def generate_ovpn_file(server_req):
 		'''Generates OVPN files
 		
 		Tier 0(1) = Free
@@ -58,34 +56,8 @@ def generate_ovpn_file(user_data):
 
 		Feature 16: IPV6 (not in use)
 		'''
-		country = input("Which country to connect to: ")
-		file = country.upper() + SERVER_FILE_TYPE
-		try:
-			with open(os.path.join(CACHE_FOLDER, file)) as file:
-				data = json.load(file)
-		except TypeError:
-			print("Servers are not cached.")
-			log.warning("Servers are not cached.") 
-			return False
 
-		try:
-			user_pref = json.loads(user_data)
-		except:
-			print("Profile was not initialized.")
-			log.warning("User profile was not initialized.")
-			return False
-
-		connectionID, best_score, server_name, server_load = auto_select_optimal_server(data, user_pref['tier'])
-		user_pref['last_conn_server_id'] = connectionID
-		user_pref['last_conn_sever_name'] = server_name
-		user_pref['last_conn_sever_protocol'] = user_pref['protocol']
-		url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectionID+"&Protocol=" + user_pref['protocol']
-
-		try:
-			server_req = requests.get(url, headers=(PROTON_HEADERS))
-			log.info("Fetched request from ProtonVPN.")
-		except:
-			log.critical("Unable to fetch request from ProtonVPN.")
+		if not server_req:
 			return False
 
 		if walk_to_file(USER_FOLDER, OVPN_FILE.split("/")[-1]):
@@ -96,10 +68,38 @@ def generate_ovpn_file(user_data):
 			return False
 
 		print("An ovpn file has bee created, try to establish a connection now.")
-		edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False)
-		log.info(f"Updated user last connection data: \"{user_pref}\"")
 		return True
 
+def generate_ovpn_for_boot(server_req):
+
+	original_req = server_req.text
+	start_index = original_req.find("auth-user-pass")
+	modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + USER_CRED_FILE.split("/")[-1] + original_req[start_index+14:]
+	ovpn_file_created = False
+	append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split("/")[-1].split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
+
+	try:
+		output = subprocess.run(["sudo", "bash", "-c", append_to_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		log.debug(f"Injection comand output: {output}")
+		ovpn_file_created = True
+	except:
+		print("Unable to create configuration file in /openvpn/client/")
+		log.critical(f"Could not generate/modify openVPN file.")
+		return False
+
+	print("Created new file in /openvpn/client/")
+	log.info(f"\"Start on boot\" path to credentials injected.")
+
+	if ovpn_file_created and walk_to_file("/opt/", USER_CRED_FILE, in_dirs=True):
+		log.critical(f"OVPN file for boot was NOT generated in: \"/etc/openvpn/client/\"")
+		return False
+	
+	if not copy_credentials():
+		return False
+
+	filename = OVPN_FILE.split("/")[-1].split(".")[0]
+	log.info(f"OVPN file for boot was generated: \"/etc/openvpn/client/{filename}\"")
+	return True
 
 # modify DNS: modify_dns()
 def modify_dns(restore_original_dns=False):
@@ -226,66 +226,6 @@ def manage_ipv6(disable_ipv6):
 		log.info("...IPV6 was disabled successfully.")
 		return True
 
-def generate_ovpn_for_boot(user_data):
-	country = input("Which country to connect to: ")
-	file = country.upper() + SERVER_FILE_TYPE
-
-	if not walk_to_file(CACHE_FOLDER, file):
-		print("There is no such file, maybe servers are not cached ?")
-		log.warning("Server files not found, maybe not cached.")
-		return False
-
-	try:
-		with open(os.path.join(CACHE_FOLDER, file)) as file:
-			data = json.load(file)
-	except:
-		log.warning("Could not find cached server.")
-		return False
-
-	user_pref = json.loads(user_data)
-	connectionID, best_score, server_name, server_load = auto_select_optimal_server(data, user_pref['tier'])
-
-	user_pref['on_boot_enabled'] = False
-	user_pref['on_boot_server_id'] = connectionID
-	user_pref['on_boot_server_name'] = server_name
-	user_pref['on_boot_protocol'] = user_pref['protocol']
-
-	url = "https://api.protonmail.ch/vpn/config?Platform=" + OS_PLATFORM + "&LogicalID="+connectionID+"&Protocol=" + user_pref['protocol']
-	try:
-		server_req = requests.get(url, headers=(PROTON_HEADERS))
-		log.info("Fetched request from ProtonVPN.")
-	except:
-		log.critical("Unable to fetch request from ProtonVPN.")
-		return False
-	original_req = server_req.text
-	start_index = original_req.find("auth-user-pass")
-	modified_request = original_req[:start_index+14] + " /opt/" + PROJECT_NAME + "/" + USER_CRED_FILE.split("/")[-1] + original_req[start_index+14:]
-	ovpn_file_created = False
-	#append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
-	append_to_file = "cat > /etc/openvpn/client/"+OVPN_FILE.split("/")[-1].split(".")[0]+".conf <<EOF "+modified_request+"\nEOF"
-
-	try:
-		subprocess.run(["sudo", "bash", "-c", append_to_file])
-		print("Created new file in /openvpn/client/")
-		log.info(f"\"Start on boot\" path to credentials injected.")
-		ovpn_file_created = True
-	except:
-		print("Unable to create configuration file in /openvpn/client/")
-		log.critical(f"Could not generate/modify openVPN file.")
-
-	if ovpn_file_created and walk_to_file("/opt/", USER_CRED_FILE, in_dirs=True):
-		log.critical(f"OVPN file for boot was NOT generated in: \"/etc/openvpn/client/\"")
-		return False
-	
-	if not copy_credentials():
-		return False
-	
-	if not edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False):
-		return False
-
-	filename = OVPN_FILE.split("/")[-1].split(".")[0]
-	log.info(f"OVPN file for boot was generated: \"/etc/openvpn/client/{filename}\"")
-	return True
 
 def copy_credentials():
 	cmds = ["mkdir /opt/"+PROJECT_NAME+"/", "cp " +USER_CRED_FILE+" /opt/"+PROJECT_NAME+"/"]
@@ -301,5 +241,23 @@ def copy_credentials():
 		return True
 	except:
 		print("Unable to copy credentials")
-		log.critical(f"Unable to copye credentials to: \"/opt/{PROJECT_NAME}\"")
+		log.critical(f"Unable to copy credentials to: \"/opt/{PROJECT_NAME}\"")
 		return False
+
+# check for ip: get_ip_info()
+def get_ip_info():
+	'''Gets the host IP from two different sources and compares them.
+	
+	Returns:
+	-------
+	Bool:
+		True if the IP's match, False otherwise.
+	'''
+	protonRequest = False
+
+	protonRequest = requests.get(PROTON_CHECK_URL, headers=(PROTON_HEADERS)).json()
+
+	if not protonRequest:
+		return False
+	#print("Internet is OK and your IP is:", dyndnsIp)
+	return (protonRequest['IP'], protonRequest['ISP'])

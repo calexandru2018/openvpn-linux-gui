@@ -3,9 +3,10 @@ import requests, re
 from include.user_manager import UserManager 
 
 # Helper methods and constants 
-from include.utils.methods import (
-	cmd_command, walk_to_file, get_ip
+from include.utils.common_methods import (
+	cmd_command, walk_to_file
 )
+from include.utils.connection_manager_helper import get_ip_info
 
 def check_requirments():
 	allReqCheck = 6
@@ -59,7 +60,7 @@ def is_internet_working_normally():
 	Bool:
 		True if ther is internet connection, False otherwise.
 	'''
-	if not get_ip():
+	if not get_ip_info():
 		return False
 	return True
 
