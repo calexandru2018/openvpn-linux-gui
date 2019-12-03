@@ -73,13 +73,13 @@ class AppEntry():
 				print("Test things")
 				continue
 			elif(self.choice == 20):
-				self.conn_manager.connect_to_p2p()
+				self.conn_manager.fastest_feature("p2p")
 				continue
 			elif(self.choice == 21):
-				self.conn_manager.connect_to_tor()
+				self.conn_manager.fastest_feature("tor")
 				continue
 			elif(self.choice == 22):
-				self.conn_manager.connect_to_secure_core()
+				self.conn_manager.fastest_feature("secure core")
 				continue
 			elif(self.choice == 23):
 				self.conn_manager.is_vpn_running()
