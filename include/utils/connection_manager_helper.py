@@ -101,53 +101,53 @@ def generate_ovpn_for_boot(server_req):
 	log.info(f"OVPN file for boot was generated: \"/etc/openvpn/client/{filename}\"")
 	return True
 
-# modify DNS: modify_dns()
-def modify_dns(restore_original_dns=False):
-	resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
+# # modify DNS: modify_dns()
+# def modify_dns(restore_original_dns=False):
+# 	resolv_conf_path = walk_to_file("/etc/", "resolv.conf", is_return_bool=False)
 	
-	if not resolv_conf_path:
-		print("The \"resolv.conf\" file was not found on your system.")
-		log.warning("\"resolv.conf\" file was not found.")
-		return False
+# 	if not resolv_conf_path:
+# 		print("The \"resolv.conf\" file was not found on your system.")
+# 		log.warning("\"resolv.conf\" file was not found.")
+# 		return False
 
-	log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
-	print("Modifying dns...")
+# 	log.info(f"Path to original resolv.conf: \"{resolv_conf_path}\"")
+# 	print("Modifying dns...")
 
-	if not restore_original_dns:
-		log.info("Applying custom ProtonVPN DNS...")
-		cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
+# 	if not restore_original_dns:
+# 		log.info("Applying custom ProtonVPN DNS...")
+# 		cmd = "cat > /etc/resolv.conf <<EOF "+PROTON_DNS+"\nEOF"
 
-		try: 
-			shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE)
-		except:
-			print("Unable to backup DNS configurations.")
-			log.warning("Unable to backup DNS configurations.")
-			return False
+# 		try: 
+# 			shutil.copy(resolv_conf_path, RESOLV_BACKUP_FILE)
+# 		except:
+# 			print("Unable to backup DNS configurations.")
+# 			log.warning("Unable to backup DNS configurations.")
+# 			return False
 
-		try:
-			output = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			print("DNS updated with new configurations.")
-			log.debug(f"...custom ProtonVPN DNS applied: {output}")
-			return True
-		except:
-			print("Unable to update DNS configurations")
-			log.warning("Unable to apply custom ProtonVPN DNS configurations.")
-			return False
-	else:
-		log.info("Restoring original DNS...")
-		try:
-			with open(RESOLV_BACKUP_FILE) as f:
-				content = f.read()
-			cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
-			subprocess.run(["sudo", "bash", "-c", cmd])
-			print("...DNS configurations were restored.")
-			delete_file(RESOLV_BACKUP_FILE)
-			log.info(f"Original configurations restored from: \"{RESOLV_BACKUP_FILE}\"")
-			return True
-		except:
-			print("Unable to restore original DNS configurations, try restarting the Network Manager.")
-			log.warning("Unable to restore original DNS configurations.")
-			return False
+# 		try:
+# 			output = subprocess.run(["sudo", "bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+# 			print("DNS updated with new configurations.")
+# 			log.debug(f"...custom ProtonVPN DNS applied: {output}")
+# 			return True
+# 		except:
+# 			print("Unable to update DNS configurations")
+# 			log.warning("Unable to apply custom ProtonVPN DNS configurations.")
+# 			return False
+# 	else:
+# 		log.info("Restoring original DNS...")
+# 		try:
+# 			with open(RESOLV_BACKUP_FILE) as f:
+# 				content = f.read()
+# 			cmd = "cat > /etc/resolv.conf <<EOF \n"+content+"\nEOF"
+# 			subprocess.run(["sudo", "bash", "-c", cmd])
+# 			print("...DNS configurations were restored.")
+# 			delete_file(RESOLV_BACKUP_FILE)
+# 			log.info(f"Original configurations restored from: \"{RESOLV_BACKUP_FILE}\"")
+# 			return True
+# 		except:
+# 			print("Unable to restore original DNS configurations, try restarting the Network Manager.")
+# 			log.warning("Unable to restore original DNS configurations.")
+# 			return False
 
 
 # manage IPV6: manage_ipv6()
@@ -249,7 +249,7 @@ def alt_ipv6(disable_ipv6):
 				log.info(f"Backup file was deleted: \"{IPV6_BACKUP_FILE}\"")
 
 			#completly disable ipv6
-			ipv6_disable = subprocess.run("sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1",shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+			ipv6_disable = subprocess.run("sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1",stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 			if not ipv6_disable.returncode == 0:
 				log.debug(f"Unable to disable ipv6: {ipv6_disable}")
 				return False
@@ -264,7 +264,21 @@ def alt_ipv6(disable_ipv6):
 			print("Backup was made")
 			return True
 		else:
-			print("restoring")
+			log.info("Start IPV6 restore process.")
+		
+			try:
+				with open(IPV6_BACKUP_FILE, "r") as file:
+					content = file.read().split()
+					default_nic = content[0].strip()
+					ipv6_addr = lines[1].strip()
+			except:
+				return False
+
+			
+			if not cmd_command(["ip", "addr", "add", ipv6_addr, "dev", default_nic], as_sudo=True):
+				return False
+
+			
 			# logger.debug("Restoring IPv6")
 			# if not os.path.isfile(ipv6_backupfile):
 			# 	logger.debug("No Backupfile found")
