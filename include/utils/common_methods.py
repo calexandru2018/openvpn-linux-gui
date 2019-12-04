@@ -162,17 +162,18 @@ def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
 	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
 	else:
-		try:
-			if as_sudo:
-				args[0].insert(0, "sudo")
-				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			else:
-				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-			decoded_output = raw_output.stdout.decode('ascii').strip()
-			log.debug(f"Sucessful CMD output: {decoded_output}")
-			return decoded_output
-		except:
+		# try:
+		if as_sudo:
+			args[0].insert(0, "sudo")
+			# raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		# else:
+		raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		if not raw_output.returncode == 0:
 			log.warning(f"Unable to run command with following args: {args}")
 			log.debug(f"Output: {raw_output}")
 			return False
+			
+		decoded_output = raw_output.stdout.decode('ascii').strip()
+		log.debug(f"Sucessful CMD output: {decoded_output}")
+		return decoded_output
+		# except:
