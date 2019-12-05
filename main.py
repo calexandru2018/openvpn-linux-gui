@@ -3,7 +3,7 @@ import os, subprocess
 from include.connection_manager import ConnectionManager
 from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
-from include.utils.connection_manager_helper import(generate_ovpn_file, modify_dns, manage_ipv6,alt_ipv6)
+from include.utils.connection_manager_helper import(generate_ovpn_file, modify_dns, manage_ipv6)
 
 # app main class
 class AppEntry():
@@ -68,13 +68,13 @@ class AppEntry():
 				continue
 			elif(self.choice == 16):
 				choice = input("Disable IPV6 ? : ")
-				disable_ipv6 = False
+				action = "restore"
 
 				if choice[0].lower() == "y":
-					disable_ipv6 = True
+					action = "disable"
 
 				# manage_ipv6(disable_ipv6=disable_ipv6)
-				alt_ipv6(disable_ipv6)
+				manage_ipv6(action_type=action)
 				continue
 			elif(self.choice == 17):
 				self.conn_manager.is_vpn_running()

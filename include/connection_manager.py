@@ -207,7 +207,7 @@ class ConnectionManager():
 		if not modify_dns():
 			return False
 		
-		if not manage_ipv6(disable_ipv6=True):
+		if not manage_ipv6(action_type="disable"):
 			return False
 		
 		# Needs to be worked on, new way to connect to VPN, might help with killswitch
@@ -273,7 +273,7 @@ class ConnectionManager():
 		if not modify_dns(restore_original_dns=True):
 			log.critical("Unable to restore DNS prior to disconnecting from VPN, restarting NetworkManager might be needed.")
 			
-		if not manage_ipv6(disable_ipv6=False):
+		if not manage_ipv6(action_type="restore"):
 			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
 
 		output = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
