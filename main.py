@@ -3,7 +3,7 @@ import os, subprocess
 from include.connection_manager import ConnectionManager
 from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
-from include.utils.connection_manager_helper import(generate_ovpn_file, modify_dns, manage_ipv6)
+from include.utils.connection_manager_helper import(generate_ovpn_file, manage_ipv6, manage_dns)
 
 # app main class
 class AppEntry():
@@ -56,12 +56,12 @@ class AppEntry():
 				continue
 			elif(self.choice == 14):
 				choice = input("[C]ustom or [R]estore ? : ")
-				restore_original_dns = False
+				restore_original_dns = "custom"
 
 				if choice[0].lower() == "r":
-					restore_original_dns = True 
+					restore_original_dns = "restore" 
 
-				modify_dns(restore_original_dns=restore_original_dns)
+				manage_dns(action_type=restore_original_dns)
 				continue
 			elif(self.choice == 15):
 				self.conn_manager.restart_network_manager()
