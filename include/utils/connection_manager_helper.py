@@ -1,4 +1,4 @@
-import os, json, netifaces, re, requests, shutil, subprocess
+import os, json, re, requests, shutil, subprocess
 
 # Helper methods and constants 
 from include.utils.common_methods import (

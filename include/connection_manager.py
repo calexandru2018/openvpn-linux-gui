@@ -1,4 +1,4 @@
-import subprocess, requests, re, os, json, pprint, shutil, time, netifaces
+import subprocess, requests, re, os, json, pprint, shutil, time
 
 from include.user_manager import UserManager
 from include.server_manager import ServerManager

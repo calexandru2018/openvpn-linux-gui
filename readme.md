@@ -1,4 +1,4 @@
-# openvpn-linux-gui [alpha v0.2.0]
+# openvpn-linux-gui [alpha v0.2.5]
 A GUI that improves the UX of ProtonVPN.
 
 Actual Situation:
@@ -14,8 +14,6 @@ Requirments:
 * **[update-resolv-conf](https://github.com/alfredopalhares/openvpn-update-resolv-conf)**
 
 * **requests**
-
-* **netifaces**
   
 Setup:
 ======
