@@ -80,7 +80,14 @@ class AppEntry():
 				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 99):
-				manage_killswitch("enable")
+				choice = input("Enable killswitch ? : ")
+				action = "restore"
+
+				if choice[0].lower() == "y":
+					action = "enable"
+
+				# manage_ipv6(disable_ipv6=disable_ipv6)
+				manage_killswitch(action)
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -93,9 +100,7 @@ class AppEntry():
 	def showMenu(self):
 		print("--------------------------------------------------------------------------------------")
 		print("""
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	!!!!                                                !!!!   
-	!!!!	       Made by Alexandru Cheltuitor         !!!!
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 	!!!!                                                !!!!
 	!!!!	            openvpn-linux-cli               !!!!
 	!!!!                   Alpha v0.2.0                 !!!!
