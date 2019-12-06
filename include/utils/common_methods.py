@@ -176,6 +176,6 @@ def cmd_command(*args, return_bool=False, as_sudo=False, as_bash=False, custom_s
 			decoded_output = raw_output.stdout.decode('ascii').strip()
 			log.debug(f"Sucessful CMD output: {decoded_output}")
 			# should return (return_code, output)
-			return decoded_output
+			return raw_output.returncode, decoded_output
 		return True
 		# except:
