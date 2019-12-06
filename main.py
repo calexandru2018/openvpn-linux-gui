@@ -3,7 +3,7 @@ import os, subprocess
 from include.connection_manager import ConnectionManager
 from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
-from include.utils.connection_manager_helper import(generate_ovpn_file, manage_ipv6, manage_dns)
+from include.utils.connection_manager_helper import(generate_ovpn_file, manage_ipv6, manage_dns, manage_killswitch)
 
 # app main class
 class AppEntry():
@@ -80,8 +80,7 @@ class AppEntry():
 				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 99):
-				self.conn_manager.test()
-				print("Test things")
+				manage_killswitch("enable")
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
