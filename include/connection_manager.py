@@ -245,8 +245,8 @@ class ConnectionManager():
 
 					if not manage_ipv6(action_type="disable"):
 						return False
-					if not manage_killswitch(action_type="enable", protocol=protocol, port=port_types[protocol])
-						return False
+					# if not manage_killswitch(action_type="enable", protocol=protocol, port=port_types[protocol]):
+					# 	return False
 					# compare old IP with new IP, if they are different the connection has succeded
 					
 					log.debug("Connected to the VPN.")
@@ -279,6 +279,9 @@ class ConnectionManager():
 			
 		if not manage_ipv6(action_type="restore"):
 			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
+
+		# if not manage_killswitch(action_type="restore"):
+		# 	return False
 
 		output = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/

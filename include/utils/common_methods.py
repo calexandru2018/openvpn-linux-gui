@@ -168,14 +168,14 @@ def cmd_command(*args, return_bool=False, as_sudo=False, as_bash=False, custom_s
 		raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 		if not raw_output.returncode == 0:
-			log.warning(f"Unable to run command with following args: {args}")
-			log.debug(f"Output: {raw_output}")
+			log.warning(f"Unable to run command: {args}")
+			log.debug(f"Return code: {raw_output.returncode}")
+			log.debug(f"Stdout:{raw_output.stdout}")
+			log.debug(f"Stderr:{raw_output.stderr}")
 			return False
 		
 		if not return_bool:
 			decoded_output = raw_output.stdout.decode('ascii').strip()
 			log.debug(f"Sucessful CMD output: {decoded_output}")
-			# should return (return_code, output)
 			return raw_output.returncode, decoded_output
 		return True
-		# except:

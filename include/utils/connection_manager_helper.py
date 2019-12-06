@@ -238,7 +238,16 @@ def manage_killswitch(action_type, protocol=None, port=None):
 	# sudo ufw enable # start on boot
 	# sudo ufw disable # disable killswitch
 	if action_type == "restore":
-		print("Restore")
+		if not os.path.isfile(IPTABLES_BACKUP_FILE):
+			log.debug("No Backupfile found")
+			return False
+
+		log.debug("Restoring IPTables rules")
+		subprocess.run(f"sudo iptables-restore < {IPTABLES_BACKUP_FILE}", shell=True, stdout=subprocess.PIPE)
+		log.debug("iptables restored")
+		delete_file(IPTABLES_BACKUP_FILE)
+		log.debug("iptables.backup removed")
+		return True
 	elif action_type == "enable":
 		if not os.path.isfile(IPTABLES_BACKUP_FILE):
 			print("No backup file")
@@ -285,15 +294,20 @@ def manage_killswitch(action_type, protocol=None, port=None):
             f"iptables -A OUTPUT -p {protocol} -m {protocol} --dport {port} -j ACCEPT", # noqa
             f"iptables -A INPUT -p {protocol} -m {protocol} --sport {port} -j ACCEPT", # noqa
         ]
-		return_code, change_iptables = cmd_command(iptables_commands, as_sudo=True)
-		if not return_code == 0:
-			log.debug("Unable to change iptables.")
-			log.debug(f"Command output:{return_code} || {change_iptables}")
-			return False
+		log.debug(f"{device}, {protocol}, {port}")
+		# return_code, change_iptables = cmd_command(iptables_commands)
+		# if not return_code == 0:
+		# 	log.debug("Unable to change iptables.")
+		# 	log.debug(f"Command output:{return_code} || {change_iptables}")
+		# 	return False,
+		iptables_commands = ["sudo "+command for command in iptables_commands]
+		# print(iptables_commands)
+		for command in iptables_commands:
+			command = command.split()
+			subprocess.run(command)
 		
 		log.debug("Kill switch enabled")
 		return True
-
 
 def copy_credentials():
 	cmds = [f"mkdir /opt/{PROJECT_NAME}/", f"cp {USER_CRED_FILE} /opt/{PROJECT_NAME}/"]
