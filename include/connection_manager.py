@@ -14,7 +14,7 @@ from include.utils.constants import (
 )
 from include.utils.connection_manager_helper import(
 	generate_ovpn_file, generate_ovpn_for_boot, 
-	manage_ipv6, get_ip_info, get_fastest_server, req_for_ovpn_file, manage_dns
+	manage_ipv6, get_ip_info, get_fastest_server, req_for_ovpn_file, manage_dns, manage_killswitch
 )
 
 from include.logger import log
@@ -170,7 +170,7 @@ class ConnectionManager():
 		if not generate_ovpn_file(server_req):
 			return False
 
-		if not self.openvpn_connect():
+		if not self.openvpn_connect(protocol=user_pref['protocol']):
 			return False
 		
 		if not edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False):
@@ -185,16 +185,16 @@ class ConnectionManager():
 	def connect_to_random(self):
 		print("Connect to random")
 
-	def openvpn_connect(self):
+	def openvpn_connect(self, protocol=False):
 		openvpn_PID = self.check_for_running_ovpn_process()
 		pre_vpn_conn_ip = False
+		port_types = {"udp": 1194, "tcp": 443}
 
 		if openvpn_PID:
 			print("Unable to connect, a OpenVPN process is already running.")
 			log.info("Unable to connect, a OpenVPN process is already running.")
 			return False
-		
-		print("Connecting to vpn server...")
+
 		try:
 			pre_vpn_conn_ip, pre_vpn_conn_isp = get_ip_info()
 		except:
@@ -207,6 +207,11 @@ class ConnectionManager():
 			print("There is no internet connection.")
 			log.warning("Unable to connect, check your internet connection.")
 		
+		print("Connecting to vpn server...")
+
+		if not protocol:
+			protocol = "udp"
+
 		# Needs to be worked on, new way to connect to VPN, might help with killswitch
 		with open(OVPN_LOG_FILE, "w+") as log_file:
 			subprocess.Popen(
@@ -240,10 +245,12 @@ class ConnectionManager():
 
 					if not manage_ipv6(action_type="disable"):
 						return False
-					# manage_killswitch
-					# manage_killswitch(action_type, protocol, port)
+					if not manage_killswitch(action_type="enable", protocol=protocol, port=port_types[protocol])
+						return False
 					# compare old IP with new IP, if they are different the connection has succeded
-					break
+					
+					log.debug("Connected to the VPN.")
+					return True
 				elif "AUTH_FAILED" in content:
 					print("Authentication failed")
 					break
@@ -320,7 +327,7 @@ class ConnectionManager():
 		#no need to try, since cmd_command already does that
 		try:
 			for command in command_list:
-				openvpn_PID = cmd_command(command)
+				return_code, openvpn_PID = cmd_command(command)
 				if openvpn_PID:
 					return openvpn_PID
 		except:

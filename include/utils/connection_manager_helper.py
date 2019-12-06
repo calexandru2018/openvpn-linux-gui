@@ -7,7 +7,7 @@ from include.utils.common_methods import (
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME,PROTON_CHECK_URL
+	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME, PROTON_CHECK_URL, IPTABLES_BACKUP_FILE,OVPN_LOG_FILE
 )
 
 from include.logger import log
@@ -226,6 +226,74 @@ def manage_ipv6(action_type):
 
 			return True
 			
+def manage_killswitch(action_type, protocol=None, port=None):
+	# code to work with ufw
+	# sudo ufw allow in to LAN_ADDR
+	# sudo ufw allow out to LAN_ADDR
+	# sudo ufw default deny outgoing
+	# sudo ufw default deny incoming
+	# sudo ufw allow out to VPN_PUBLIC_ADDR port VPN_PORT proto PROTOCOL
+	# sudo ufw allow out on tun0 from any to any # tun0 should be fatched from opvn.log as TUN/TAP (someting) opened
+	# sudo ufw allow in on tun0 from any to any # same as above, though to allow inbound traffic
+	# sudo ufw enable # start on boot
+	# sudo ufw disable # disable killswitch
+	if action_type == "restore":
+		print("Restore")
+	elif action_type == "enable":
+		if not os.path.isfile(IPTABLES_BACKUP_FILE):
+			print("No backup file")
+			# return False
+
+		with open(OVPN_LOG_FILE, "r") as f:
+			content = f.read()
+			device = re.search(r"(TUN\/TAP device) (.+) opened", content)
+
+		if not device:
+			print("[!] Kill Switch activation failed."
+					"Device couldn't be determined.")
+			log.debug(
+				"Kill Switch activation failed. No device in logfile"
+			)
+			return False
+
+		device = device.group(2)
+		log.debug("Backing up iptables rules")
+		return_code, iptables_rules = cmd_command(["sudo", "iptables-save"], as_sudo=True)
+
+		if "COMMIT" in iptables_rules:
+			with open(IPTABLES_BACKUP_FILE, "w") as f:
+				f.write(iptables_rules)
+		else:
+			with open(IPTABLES_BACKUP_FILE, "w") as f:
+				f.write("*filter\n")
+				f.write(":INPUT ACCEPT\n")
+				f.write(":FORWARD ACCEPT\n")
+				f.write(":OUTPUT ACCEPT\n")
+				f.write("COMMIT\n")
+
+		iptables_commands = [
+            "iptables -F",
+            "iptables -P INPUT DROP",
+            "iptables -P OUTPUT DROP",
+            "iptables -P FORWARD DROP",
+            "iptables -A OUTPUT -o lo -j ACCEPT",
+            "iptables -A INPUT -i lo -j ACCEPT",
+            f"iptables -A OUTPUT -o {device} -j ACCEPT",
+            f"iptables -A INPUT -i {device} -j ACCEPT",
+            f"iptables -A OUTPUT -o {device} -m state --state ESTABLISHED,RELATED -j ACCEPT", # noqa
+            f"iptables -A INPUT -i {device} -m state --state ESTABLISHED,RELATED -j ACCEPT", # noqa
+            f"iptables -A OUTPUT -p {protocol} -m {protocol} --dport {port} -j ACCEPT", # noqa
+            f"iptables -A INPUT -p {protocol} -m {protocol} --sport {port} -j ACCEPT", # noqa
+        ]
+		return_code, change_iptables = cmd_command(iptables_commands, as_sudo=True)
+		if not return_code == 0:
+			log.debug("Unable to change iptables.")
+			log.debug(f"Command output:{return_code} || {change_iptables}")
+			return False
+		
+		log.debug("Kill switch enabled")
+		return True
+
 
 def copy_credentials():
 	cmds = [f"mkdir /opt/{PROJECT_NAME}/", f"cp {USER_CRED_FILE} /opt/{PROJECT_NAME}/"]
