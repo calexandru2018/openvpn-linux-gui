@@ -3,7 +3,7 @@ import os, subprocess
 from include.connection_manager import ConnectionManager
 from include.check_requirments import (check_requirments)
 from include.utils.constants import (USER_CRED_FILE)
-from include.utils.connection_manager_helper import(generate_ovpn_file, modify_dns, manage_ipv6)
+from include.utils.connection_manager_helper import(generate_ovpn_file, manage_ipv6, manage_dns, manage_killswitch)
 
 # app main class
 class AppEntry():
@@ -56,30 +56,38 @@ class AppEntry():
 				continue
 			elif(self.choice == 14):
 				choice = input("[C]ustom or [R]estore ? : ")
-				restore_original_dns = False
+				restore_original_dns = "custom"
 
 				if choice[0].lower() == "r":
-					restore_original_dns = True 
+					restore_original_dns = "restore" 
 
-				modify_dns(restore_original_dns=restore_original_dns)
+				manage_dns(action_type=restore_original_dns)
 				continue
 			elif(self.choice == 15):
 				self.conn_manager.restart_network_manager()
 				continue
 			elif(self.choice == 16):
 				choice = input("Disable IPV6 ? : ")
-				disable_ipv6 = False
+				action = "restore"
 
 				if choice[0].lower() == "y":
-					disable_ipv6 = True
+					action = "disable"
 
-				manage_ipv6(disable_ipv6=disable_ipv6)
+				# manage_ipv6(disable_ipv6=disable_ipv6)
+				manage_ipv6(action_type=action)
 				continue
 			elif(self.choice == 17):
 				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 99):
-				print("Test things")
+				choice = input("Enable killswitch ? : ")
+				action = "restore"
+
+				if choice[0].lower() == "y":
+					action = "enable"
+
+				# manage_ipv6(disable_ipv6=disable_ipv6)
+				manage_killswitch(action)
 				continue
 			elif(self.choice == 0):
 				print("Exit program\n")
@@ -92,9 +100,7 @@ class AppEntry():
 	def showMenu(self):
 		print("--------------------------------------------------------------------------------------")
 		print("""
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	!!!!                                                !!!!   
-	!!!!	       Made by Alexandru Cheltuitor         !!!!
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 	!!!!                                                !!!!
 	!!!!	            openvpn-linux-cli               !!!!
 	!!!!                   Alpha v0.2.0                 !!!!

@@ -4,7 +4,8 @@ HOME = os.environ["HOME"]
 USER = os.environ["USERNAME"]
 PROJECT_NAME = "openvpn-linux-gui"
 PROJ_PATH = os.path.join(os.path.expanduser(f"~{USER}"), f"{PROJECT_NAME}")
-LOG_FILE = os.path.join(PROJ_PATH, "logfile.log")
+LOG_FILE = os.path.join(PROJ_PATH, "logs/logfile.log")
+OVPN_LOG_FILE = os.path.join(PROJ_PATH, "logs/ovpn.log")
 
 USER_FOLDER = os.path.join(PROJ_PATH, "user_conf")
 USER_CRED_FILE = os.path.join(USER_FOLDER, ".user_credentials")
@@ -13,6 +14,7 @@ CACHE_FOLDER = os.path.join(PROJ_PATH, "cache_servers")
 OVPN_FILE = os.path.join(USER_FOLDER, "server.ovpn")
 RESOLV_BACKUP_FILE = os.path.join(USER_FOLDER, ".resolv_conf_backup")
 IPV6_BACKUP_FILE = os.path.join(USER_FOLDER, ".ipv6_backup")
+IPTABLES_BACKUP_FILE = os.path.join(USER_FOLDER, ".iptables")
 
 SERVER_FILE_TYPE = ".json"
 OS_PLATFORM = "linux"

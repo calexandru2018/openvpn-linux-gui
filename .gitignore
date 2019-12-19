@@ -16,7 +16,7 @@ include/content.py
 .Python
 build/
 develop-eggs/
-#dist/
+dist/
 downloads/
 eggs/
 .eggs/

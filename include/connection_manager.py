@@ -1,4 +1,4 @@
-import subprocess, requests, re, os, json, pprint, shutil, time, netifaces
+import subprocess, requests, re, os, json, pprint, shutil, time
 
 from include.user_manager import UserManager
 from include.server_manager import ServerManager
@@ -10,11 +10,11 @@ from include.utils.common_methods import (
 )
 from include.utils.constants import (
 	USER_CRED_FILE, USER_PREF_FILE, OVPN_FILE, CACHE_FOLDER, RESOLV_BACKUP_FILE, IPV6_BACKUP_FILE, SERVER_FILE_TYPE, 
-	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME
+	OS_PLATFORM, USER_FOLDER, PROTON_HEADERS, PROJECT_NAME, PROTON_DNS, ON_BOOT_PROCESS_NAME, LOG_FILE, OVPN_LOG_FILE
 )
 from include.utils.connection_manager_helper import(
-	generate_ovpn_file, generate_ovpn_for_boot, modify_dns, 
-	manage_ipv6, get_ip_info, get_fastest_server, req_for_ovpn_file
+	generate_ovpn_file, generate_ovpn_for_boot, 
+	manage_ipv6, get_ip_info, get_fastest_server, req_for_ovpn_file, manage_dns, manage_killswitch
 )
 
 from include.logger import log
@@ -120,6 +120,10 @@ class ConnectionManager():
 		log.info(f"Start on boot created: \"{output.stdout.decode()}\"")
 
 	def fastest_country(self):
+		if self.check_for_running_ovpn_process():
+			print("VPN already running.")
+			return False
+
 		server_feature_filter = [1, 2]
 		server_collection = []
 		self.server_manager.cache_servers()
@@ -166,7 +170,7 @@ class ConnectionManager():
 		if not generate_ovpn_file(server_req):
 			return False
 
-		if not self.openvpn_connect():
+		if not self.openvpn_connect(protocol=user_pref['protocol']):
 			return False
 		
 		if not edit_file(USER_PREF_FILE, json.dumps(user_pref, indent=2), append=False):
@@ -181,17 +185,16 @@ class ConnectionManager():
 	def connect_to_random(self):
 		print("Connect to random")
 
-	# connect to open_vpn: openvpn_connect()
-	def openvpn_connect(self):
+	def openvpn_connect(self, protocol=False):
 		openvpn_PID = self.check_for_running_ovpn_process()
 		pre_vpn_conn_ip = False
+		port_types = {"udp": 1194, "tcp": 443}
 
 		if openvpn_PID:
 			print("Unable to connect, a OpenVPN process is already running.")
 			log.info("Unable to connect, a OpenVPN process is already running.")
 			return False
-		
-		print("Connecting to vpn server...")
+
 		try:
 			pre_vpn_conn_ip, pre_vpn_conn_isp = get_ip_info()
 		except:
@@ -204,35 +207,53 @@ class ConnectionManager():
 			print("There is no internet connection.")
 			log.warning("Unable to connect, check your internet connection.")
 		
-		if not modify_dns():
-			return False
-		
-		if not manage_ipv6(disable_ipv6=True):
-			return False
+		print("Connecting to vpn server...")
 
-		var = subprocess.run(["sudo","openvpn", "--daemon", "--config", OVPN_FILE, "--auth-user-pass", USER_CRED_FILE], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		if not protocol:
+			protocol = "udp"
 
-		if var.returncode != 0:
-			print("Unable to connecto to VPN.")
-			log.critical(f"Unable to connected to VPN, \"{var}\"")
-			return False
+		# Needs to be worked on, new way to connect to VPN, might help with killswitch
+		with open(OVPN_LOG_FILE, "w+") as log_file:
+			subprocess.Popen(
+				[	"sudo",
+					"openvpn",
+					"--config", OVPN_FILE,
+					"--auth-user-pass", USER_CRED_FILE
+				],
+				stdout=log_file, stderr=log_file
+			)
 
-		# time.sleep(2)
+		with open(OVPN_LOG_FILE, "r") as log_file:
+			while True:
+				content = log_file.read()
+				log_file.seek(0)
+				if "Initialization Sequence Completed" in content:
+					print("VPN established")
+					#change DNS
+					dns_dhcp_regex = re.compile(
+						r"(dhcp-option DNS )"
+						r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+					)
+					dns_dhcp = dns_dhcp_regex.search(content)
+					log.debug(f"DNS___RESULT: {dns_dhcp}")
+					if dns_dhcp:
+						dns_server = dns_dhcp.group(2)
+						manage_dns(action_type="custom", dns_addr=dns_server)
+					else:
+						print("Could not apply custom DNS.")
+						log.critical(f"Could not apply custom DNS: {dns_dhcp}")
 
-		# try:
-		# 	post_vpn_conn_ip, post_vpn_conn_isp = get_ip_info()
-		# except:
-		# 	post_vpn_conn_ip = False
-		# 	post_vpn_conn_isp = False
-
-		# print(f"Old IP: {pre_vpn_conn_ip} and old IPS: {pre_vpn_conn_isp}\nNew IP: {post_vpn_conn_ip} and new IPS: {post_vpn_conn_isp}")
-		
-		if not delete_folder_recursive(CACHE_FOLDER):
-			log.info("Cache folder was not deleted.")
-		
-		log.info("Connected to VPN.")
-		print("You are connected to the VPN.")
-		return True
+					if not manage_ipv6(action_type="disable"):
+						return False
+					# if not manage_killswitch(action_type="enable", protocol=protocol, port=port_types[protocol]):
+					# 	return False
+					# compare old IP with new IP, if they are different the connection has succeded
+					
+					log.debug("Connected to the VPN.")
+					return True
+				elif "AUTH_FAILED" in content:
+					print("Authentication failed")
+					break
 
 	def openvpn_disconnect(self):
 		openvpn_PID = self.check_for_running_ovpn_process()
@@ -253,23 +274,25 @@ class ConnectionManager():
 		
 		log.info(f"Tested for internet connection: \"{is_connected}\"")
 
-		if not modify_dns(restore_original_dns=True):
+		if not manage_dns(action_type="restore"):
 			log.critical("Unable to restore DNS prior to disconnecting from VPN, restarting NetworkManager might be needed.")
 			
-		if not manage_ipv6(disable_ipv6=False):
+		if not manage_ipv6(action_type="restore"):
 			log.warning("Unable to enable IPV6 prior to disconnecting from VPN.")
 
-		var = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		# if not manage_killswitch(action_type="restore"):
+		# 	return False
+
+		output = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
-		if var.returncode != 0:
+		if output.returncode != 0:
 			print("Unable to disconnecto from VPN.")
-			log.critical(f"Unable to disconnecto from VPN, \"{var}\"")
+			log.critical(f"Unable to disconnecto from VPN, \"{output}\"")
 			return False
 
 		log.info("Disconnected from VPN.")
 		print("You are disconnected from VPN.")
 		return True
-		#self.ip_swap("disconnect", is_connected)	
 
 	def restart_network_manager(self):
 		try:
@@ -291,12 +314,15 @@ class ConnectionManager():
 		if openvpn_PID and (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
 			print("VPN is running with custom DNS.")
 			log.info(f"VPN is running\nOVPN PID:{openvpn_PID}\nDNF conf:\n{res.stdout.decode()}")
+			return True
 		elif openvpn_PID and not (res.returncode == 0 and ("10.8.8.1" in res.stdout.decode() or "10.7.7.1" in res.stdout.decode())):
 			print("VPN is running, but there might be DNS leaks. Try modifying your DNS configurations.")
 			log.warning(f"Resolv conf has original values, custom ProtonVPN DNS configuration not found: {res.stdout.decode()}")
+			return True
 		else:
 			print("VPN is not running.")
 			log.info("Could not find any OpenVPN processes.")
+			return False
 
 	def check_for_running_ovpn_process(self):
 		openvpn_PID = False
@@ -304,7 +330,7 @@ class ConnectionManager():
 		#no need to try, since cmd_command already does that
 		try:
 			for command in command_list:
-				openvpn_PID = cmd_command(command)
+				return_code, openvpn_PID = cmd_command(command)
 				if openvpn_PID:
 					return openvpn_PID
 		except:
@@ -312,3 +338,5 @@ class ConnectionManager():
 			return openvpn_PID
 
 	
+	def test(self):
+		print("Test")

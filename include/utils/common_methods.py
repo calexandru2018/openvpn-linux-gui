@@ -158,21 +158,24 @@ def delete_folder_recursive(path):
 		log.critical(f"Could not recursively delete folder: \"{path}\".")
 		return False
 
-def cmd_command(*args, return_output=True, as_sudo=False, as_bash=False):
-	if(not return_output and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
+def cmd_command(*args, return_bool=False, as_sudo=False, as_bash=False, custom_shell=False, default_shelll=False):
+	if(return_bool and subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode == 0):
 		return True
 	else:
-		try:
-			if as_sudo:
-				args[0].insert(0, "sudo")
-				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			else:
-				raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		if as_sudo:
+			args[0].insert(0, "sudo")
+		
+		raw_output = subprocess.run(args[0], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+		if not raw_output.returncode == 0:
+			log.warning(f"Unable to run command: {args}")
+			log.debug(f"Return code: {raw_output.returncode}")
+			log.debug(f"Stdout:{raw_output.stdout}")
+			log.debug(f"Stderr:{raw_output.stderr}")
+			return False
+		
+		if not return_bool:
 			decoded_output = raw_output.stdout.decode('ascii').strip()
 			log.debug(f"Sucessful CMD output: {decoded_output}")
-			return decoded_output
-		except:
-			log.warning(f"Unable to run command with following args: {args}")
-			log.debug(f"Output: {raw_output}")
-			return False
+			return raw_output.returncode, decoded_output
+		return True
