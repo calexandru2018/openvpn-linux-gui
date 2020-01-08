@@ -90,8 +90,23 @@ class ConnectionManager():
 
 			if not generate_ovpn_for_boot(server_req):
 				return False
+		elif action == "kill":
+			openvpn_PID = self.check_for_running_ovpn_process()
+			if not openvpn_PID:
+				print("Not PID was found")
+				log.debug("Attempted to kill \"openvpn start on boot\" process, none found.")
+				return False
 
-		if action == "disable":
+			output = subprocess.run(["sudo","kill", "-9", openvpn_PID], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			# SIGTERM - Terminate opevVPN, ref: https://www.poftut.com/what-is-linux-sigterm-signal-and-difference-with-sigkill/
+			if output.returncode != 0:
+				print(f"Unable to kill PID {openvpn_PID}.")
+				log.critical(f"Unable to disconnecto from VPN, \"{output}\"")
+				return False
+
+			self.restart_network_manager()
+			return True
+		elif action == "disable":
 			success_msg = "\"Launch on boot\" service is disabled."
 			fail_msg = "Cant disable service \"launch on boot\"."
 			enabled_on_boot = False
