@@ -40,21 +40,24 @@ class AppEntry():
 				self.conn_manager.start_on_boot_manager("restart")
 				continue
 			elif(self.choice == 9):
-				print("Quick connect to quickest server, country independent.")
+				self.conn_manager.start_on_boot_manager("kill")
 				continue
 			elif(self.choice == 10):
-				self.conn_manager.fastest_feature("p2p")
+				print("Quick connect to quickest server, country independent.")
 				continue
 			elif(self.choice == 11):
-				self.conn_manager.fastest_feature("tor")
+				self.conn_manager.fastest_feature("p2p")
 				continue
 			elif(self.choice == 12):
-				self.conn_manager.fastest_feature("secure core")
+				self.conn_manager.fastest_feature("tor")
 				continue
 			elif(self.choice == 13):
-				self.conn_manager.fastest_feature("Connect to last connected.")
+				self.conn_manager.fastest_feature("secure core")
 				continue
 			elif(self.choice == 14):
+				self.conn_manager.fastest_feature("Connect to last connected.")
+				continue
+			elif(self.choice == 15):
 				choice = input("[C]ustom or [R]estore ? : ")
 				restore_original_dns = "custom"
 
@@ -63,10 +66,10 @@ class AppEntry():
 
 				manage_dns(action_type=restore_original_dns)
 				continue
-			elif(self.choice == 15):
+			elif(self.choice == 16):
 				self.conn_manager.restart_network_manager()
 				continue
-			elif(self.choice == 16):
+			elif(self.choice == 17):
 				choice = input("Disable IPV6 ? : ")
 				action = "restore"
 
@@ -76,7 +79,7 @@ class AppEntry():
 				# manage_ipv6(disable_ipv6=disable_ipv6)
 				manage_ipv6(action_type=action)
 				continue
-			elif(self.choice == 17):
+			elif(self.choice == 18):
 				self.conn_manager.is_vpn_running()
 				continue
 			elif(self.choice == 99):
@@ -107,20 +110,20 @@ class AppEntry():
 	!!!!                                                !!!! 
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	[1] - Check Requirments\t\t\t [9] - Quick Connect [Under work]
-	[2] - Create user\t\t\t [10] - Connect to P2P [Under work]
-	[3] - Edit User\t\t\t\t [11] - Connect to TOR [Under work]
-	[4] - VPN Fastest by Country\t\t [12] - Connect to Secure Core [Under work]
-	[5] - Disconnect VPN \t\t\t [13] - Connect to last selected [Under work]
-	[6] - Enable "start on boot" service \t\t 
+	[1] - Check Requirments\t\t\t [9] - Kill "start on boot" process
+	[2] - Create user\t\t\t [10] - Quick Connect [Under work]
+	[3] - Edit User\t\t\t\t [11] - Connect to P2P [Under work]
+	[4] - VPN Fastest by Country\t\t [12] - Connect to TOR [Under work] 
+	[5] - Disconnect VPN \t\t\t [13] - Connect to Secure Core [Under work]
+	[6] - Enable "start on boot" service \t [14] - Connect to last selected [Under work] 
 	[7] - Disable "start on boot" service \t\t
 	[8] - Restart "start on boot" service \t\t 
 
 
-	[14] - Manage DNS
-	[15] - Restart NetworkManager
-	[16] - Manage IPV6
-	[17] - Is VPN Running
+	[15] - Manage DNS
+	[16] - Restart NetworkManager
+	[17] - Manage IPV6
+	[18] - Is VPN Running
 	[99] - Test purpose
 
 	[50] - End active VPN sessions [Not working]
