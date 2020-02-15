@@ -1,9 +1,9 @@
 # openvpn-linux-gui [alpha v0.2.5]
-A GUI that improves the UX of ProtonVPN.
+A terminal GUI that improves the UX of ProtonVPN.
 
 Actual Situation:
 ======
-**NOTE:** This is a work in progress, occasional bugs or issues may occur. Since the work is not packaged, you'll have to download it from github and (preferably) clone it into your /home/[user]/ folder. 
+**NOTE:** Occasional bugs or issues may occur. Since the work is not packaged, you'll have to download it from github and (preferably) clone it into your /home/[user]/ folder. 
 
 Requirments:
 ======
