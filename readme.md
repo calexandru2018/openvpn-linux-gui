@@ -1,4 +1,4 @@
-# openvpn-linux-gui [alpha v0.2.5]
+# openvpn-linux-gui [alpha v0.2.5] - [Closed]
 A terminal GUI that improves the UX of ProtonVPN.
 
 Actual Situation:
